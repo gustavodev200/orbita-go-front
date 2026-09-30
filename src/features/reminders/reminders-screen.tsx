@@ -19,7 +19,7 @@ import { useCreateReminder, useParseReminder, useReminders, useToggleReminder } 
 const WEEKDAYS = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
 const REPEAT_LABEL = { none: "Uma vez", daily: "Todo dia", weekly: "Toda semana", monthly: "Todo mês" } as const;
 
-function whenLabel(r: ReminderDraft, today: string): string {
+export function whenLabel(r: ReminderDraft, today: string): string {
   if (r.repeat === "monthly") return r.dayOfMonth ? `Todo dia ${r.dayOfMonth}` : "Todo mês";
   if (r.repeat === "weekly") return r.weekday != null ? `Toda ${WEEKDAYS[r.weekday]}` : "Toda semana";
   if (r.repeat === "daily") return "Todo dia";
@@ -31,7 +31,7 @@ function whenLabel(r: ReminderDraft, today: string): string {
 }
 
 /** Próxima data em que o lembrete dispara (para a prévia da tela bloqueada). */
-function nextFireDate(r: ReminderDraft, today: string): string {
+export function nextFireDate(r: ReminderDraft, today: string): string {
   if (r.repeat === "monthly" && r.dayOfMonth) {
     const [y, m, d] = today.split("-").map(Number);
     const target = r.dayOfMonth >= d ? new Date(Date.UTC(y, m - 1, r.dayOfMonth)) : new Date(Date.UTC(y, m, r.dayOfMonth));
@@ -206,6 +206,7 @@ export function RemindersScreen({ streak }: { streak: number }) {
             ) : draft ? (
               <motion.div
                 key="preview"
+                data-testid="reminder-ai-preview"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}

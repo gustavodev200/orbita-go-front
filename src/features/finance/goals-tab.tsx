@@ -6,6 +6,7 @@ import { ChoiceChip } from "@/components/orbita/choice-chip";
 import { Icon } from "@/components/orbita/icon";
 import { IconTile } from "@/components/orbita/icon-tile";
 import { FieldLabel, PanelBody, PanelFooter, PanelHeader } from "@/components/orbita/panel";
+import { SegmentedControl, type SegmentOption } from "@/components/orbita/segmented-control";
 import { EmptyState, QueryState } from "@/components/orbita/states";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -62,16 +63,26 @@ export function GoalIconPicker({ value, onChange }: { value: string; onChange: (
   );
 }
 
+type InstallmentMode = "gerar" | "manual";
+const INSTALLMENT_MODES: SegmentOption<InstallmentMode>[] = [
+  { value: "gerar", label: "Gerar" },
+  { value: "manual", label: "Manual" },
+];
+
 function NewGoalDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpenChange: (o: boolean) => void; onCreated: (g: Goal) => void }) {
   const [name, setName] = useState("");
   const [value, setValue] = useState("");
   const [icon, setIcon] = useState("landscape");
   const [deadline, setDeadline] = useState("");
+  const [installmentMode, setInstallmentMode] = useState<InstallmentMode>("gerar");
+  const [installmentValue, setInstallmentValue] = useState("");
   const create = useCreateGoal((g) => {
     onCreated(g);
     onOpenChange(false);
   });
   const cents = parseBRLToCents(value);
+  const installmentCents = parseBRLToCents(installmentValue);
+  const installmentInvalid = installmentMode === "manual" && (installmentCents <= 0 || installmentCents > cents);
   return (
     <Dialog open={open} onOpenChange={onOpenChange} title="Nova meta">
       <PanelHeader title="Nova meta" onClose={() => onOpenChange(false)} />
@@ -102,13 +113,42 @@ function NewGoalDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpe
             className="font-display text-[15px] font-extrabold"
           />
         </div>
+        <div>
+          <FieldLabel>Quanto guardar por vez</FieldLabel>
+          <SegmentedControl value={installmentMode} onChange={setInstallmentMode} options={INSTALLMENT_MODES} ariaLabel="Quanto guardar por vez" />
+          {installmentMode === "manual" ? (
+            <Input
+              size="hero"
+              tone="raised"
+              inputMode="numeric"
+              icon={<span className="num text-lg font-extrabold text-mut">R$</span>}
+              value={installmentValue}
+              onChange={(e) => setInstallmentValue(maskBRLInput(e.target.value))}
+              placeholder="0,00"
+              aria-label="Valor da parcela"
+              className="num mt-2 text-xl font-extrabold"
+            />
+          ) : (
+            <div className="mt-2 text-[13px] leading-[1.4] font-semibold text-mut">
+              A trilha calcula o valor sugerido pra você (meta dividida em 10 passos).
+            </div>
+          )}
+        </div>
       </PanelBody>
       <PanelFooter>
         <Button
           size="lg"
           block
-          disabled={!name.trim() || cents <= 0 || create.isPending}
-          onClick={() => create.mutate({ name: name.trim(), targetCents: cents, icon, deadline: deadline || null })}
+          disabled={!name.trim() || cents <= 0 || installmentInvalid || create.isPending}
+          onClick={() =>
+            create.mutate({
+              name: name.trim(),
+              targetCents: cents,
+              icon,
+              deadline: deadline || null,
+              installmentCents: installmentMode === "manual" ? installmentCents : null,
+            })
+          }
         >
           Criar meta
         </Button>

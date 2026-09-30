@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import type { Category, Frequency, ParsedTx, Transaction, TxType } from "@/lib/api/schemas";
 import { EXPENSE_GRID, INCOME_GRID, findCategory } from "@/lib/categories";
+import { accountColor } from "@/lib/colors";
 import { addDaysISO, diffDays, formatDM, parseDMY, parseISODate, todayISO } from "@/lib/dates";
 import { formatBRL } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -322,7 +323,7 @@ export function NewTransactionForm({
                 a.id === selectedAccount ? "border-ink" : "border-bd",
               )}
             >
-              <span className="size-3.5 rounded-[5px]" style={{ background: a.color }} />
+              <span className="size-3.5 rounded-[5px]" style={{ background: accountColor(a) }} />
               {a.name}
             </button>
           ))}

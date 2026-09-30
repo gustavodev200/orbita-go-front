@@ -25,6 +25,11 @@ export type TxSheetState = {
 
 export const TOAST_DURATION = 2400;
 
+/** Mesmo evento de celebração (kind + identificador): achievement.key pra conquista, level pra nível. */
+function sameCelebration(a: ModalState, b: ModalState): boolean {
+  return a.kind === b.kind && a.achievement?.key === b.achievement?.key && a.level === b.level;
+}
+
 type AppState = {
   me: Me | null;
   setMe: (me: Me | null) => void;
@@ -79,8 +84,16 @@ export const useAppStore = create<AppState>()(
       modal: null,
       modalQueue: [],
       openModal: (m) => {
-        if (get().modal) set((s) => ({ modalQueue: [...s.modalQueue, m] }));
-        else set({ modal: m });
+        const { modal, modalQueue } = get();
+        // Mesma conquista/nível pode chegar 2x (aberta na mão no Perfil + fila do reward
+        // pro mesmo evento) — ignora duplicata pra não reabrir sozinha ao fechar a 1ª.
+        if (modal && sameCelebration(modal, m)) return;
+        if (modal) {
+          if (modalQueue.some((q) => sameCelebration(q, m))) return;
+          set({ modalQueue: [...modalQueue, m] });
+        } else {
+          set({ modal: m });
+        }
       },
       replaceModal: (m) => set({ modal: m }),
       closeModal: () => {

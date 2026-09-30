@@ -55,7 +55,13 @@ export const putBudgets = (items: { categoryKey: string; limitCents: number }[])
   send("put", "/budgets", z.array(budgetSchema), { items });
 
 export const getGoals = () => get("/goals", z.array(goalSchema));
-export type GoalInput = { name: string; targetCents: number; icon: string; deadline?: string | null };
+export type GoalInput = {
+  name: string;
+  targetCents: number;
+  icon: string;
+  deadline?: string | null;
+  installmentCents?: number | null;
+};
 export const createGoal = (input: GoalInput) => send("post", "/goals", goalSchema, input);
 export const depositGoal = (id: string, amountCents: number) =>
   sendRewarded("post", `/goals/${id}/deposit`, goalSchema, { amountCents });

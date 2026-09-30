@@ -64,14 +64,14 @@ export function OnboardingScreen() {
   const expenseCats = categories.filter((c) => c.type === "expense" && c.key !== "out");
 
   const submit = useApiMutation({
-    mutationFn: () => {
+    mutationFn: (skipGoal: boolean) => {
       const targetCents = parseBRLToCents(goalValue);
       const incomeCents = parseBRLToCents(income);
       return completeOnboarding({
         name: shownName.trim() || "Você",
         ...(incomeCents > 0 ? { monthlyIncomeCents: incomeCents } : {}),
         categoryKeys: expenseCats.filter((c) => !off.includes(c.key)).map((c) => c.key),
-        ...(goal.trim() && targetCents > 0 ? { goal: { name: goal.trim(), targetCents, icon } } : {}),
+        ...(!skipGoal && goal.trim() && targetCents > 0 ? { goal: { name: goal.trim(), targetCents, icon } } : {}),
       });
     },
     onSuccess: (res) => {
@@ -98,7 +98,7 @@ export function OnboardingScreen() {
     }
     if (step === 0 && !shownName.trim()) return;
     if (step === 3) {
-      submit.mutate();
+      submit.mutate(false);
       return;
     }
     setStep((s) => s + 1);
@@ -273,6 +273,17 @@ export function OnboardingScreen() {
                 setIncome("");
                 setStep(2);
               }}
+            >
+              Pular
+            </Button>
+          ) : null}
+          {step === 3 ? (
+            <Button
+              variant="secondary"
+              size="lg"
+              className="px-5 text-[15px] text-mut"
+              disabled={submit.isPending}
+              onClick={() => submit.mutate(true)}
             >
               Pular
             </Button>

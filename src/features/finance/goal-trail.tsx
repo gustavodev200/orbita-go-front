@@ -7,14 +7,10 @@ import { Button } from "@/components/ui/button";
 import { useIsDesktop } from "@/hooks/use-media-query";
 import type { Goal } from "@/lib/api/schemas";
 import { formatBRL } from "@/lib/format";
+import { CHEST_AFTER, CHEST_COINS, chestOpenedOf, nodeStateOf, suggestedStepAmountOf, type NodeState } from "./goal-trail-math";
 
 /** Offsets X da trilha em zig-zag (×0.7 no mobile). */
 const XS = [0, 56, 84, 56, 0, -56, -84, -56, 0, 40];
-/** Baús depois dos nós 3 e 7 (índices 2 e 6). */
-const CHEST_AFTER = [2, 6];
-const CHEST_COINS = 50;
-
-type NodeState = "done" | "current" | "locked";
 
 function TrailNode({ state, last, label }: { state: NodeState; last: boolean; label: string }) {
   const reduce = useReducedMotion();
@@ -78,7 +74,6 @@ export function GoalTrail({ goal, onSave, saving }: { goal: Goal; onSave: (amoun
   const reduce = useReducedMotion();
   const steps = goal.steps || 10;
   const per = Math.round(goal.targetCents / steps);
-  const current = goal.completed ? steps : goal.currentStep;
   const k = desktop ? 1 : 0.7;
 
   const items: ({ kind: "node"; i: number } | { kind: "chest"; i: number })[] = [];
@@ -92,15 +87,17 @@ export function GoalTrail({ goal, onSave, saving }: { goal: Goal; onSave: (amoun
       {items.map((it, idx) => {
         const x = XS[idx % XS.length] * k;
         if (it.kind === "chest") {
-          const opened = current > it.i || goal.chestsOpened.includes(it.i + 1);
+          const opened = chestOpenedOf(goal, it.i);
           return (
             <div key={`c${it.i}`} className="relative flex flex-col items-center" style={{ transform: `translateX(${x}px)` }}>
               <Chest opened={opened} />
             </div>
           );
         }
-        const state: NodeState = it.i < current ? "done" : it.i === current ? "current" : "locked";
-        const amount = it.i === steps - 1 ? goal.targetCents - per * (steps - 1) : per;
+        const state: NodeState = nodeStateOf(goal, it.i);
+        // Parcela configurada (manual ou gerada) sugere o valor do passo atual;
+        // os marcos da trilha (labels, baús) continuam divididos em 10 partes iguais.
+        const suggested = suggestedStepAmountOf(goal, it.i);
         return (
           <div key={`n${it.i}`} className="relative flex flex-col items-center" style={{ transform: `translateX(${x}px)` }}>
             {state === "current" ? (
@@ -109,8 +106,8 @@ export function GoalTrail({ goal, onSave, saving }: { goal: Goal; onSave: (amoun
                 animate={reduce ? undefined : { y: [0, -6, 0] }}
                 transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
               >
-                <Button size="sm" className="h-11 rounded-[14px] px-4 text-sm" disabled={saving} onClick={() => onSave(amount)}>
-                  Guardar {formatBRL(amount, { compact: true })}
+                <Button size="sm" className="h-11 rounded-[14px] px-4 text-sm" disabled={saving} onClick={() => onSave(suggested)}>
+                  Guardar {formatBRL(suggested, { compact: true })}
                 </Button>
                 <div className="-mt-2 size-3.5 rotate-45 bg-g" />
               </motion.div>

@@ -13,3 +13,17 @@ export const ROTATING_TONES = [
 
 export const PRIORITY_COLOR = { high: "var(--r)", medium: "var(--o)", low: "var(--b)" } as const;
 export const PRIORITY_LABEL = { high: "Alta", medium: "Média", low: "Baixa" } as const;
+
+// API_CONTRACT "Pedidos do front": `Account.color` é opcional — sem o back
+// mandar, mapeamos pelo nome das contas seed (Nubank/Itaú/Carteira).
+const ACCOUNT_COLOR_BY_NAME: Record<string, string> = {
+  nubank: "#8A05BE",
+  itaú: "#EC7000",
+  itau: "#EC7000",
+  carteira: "#20B878",
+};
+const ACCOUNT_COLOR_FALLBACK = "#9A8C7E";
+
+export function accountColor(account: { name: string; color?: string | null }): string {
+  return account.color ?? ACCOUNT_COLOR_BY_NAME[account.name.trim().toLowerCase()] ?? ACCOUNT_COLOR_FALLBACK;
+}

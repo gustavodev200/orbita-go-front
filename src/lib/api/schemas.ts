@@ -61,7 +61,8 @@ export const accountSchema = z.object({
   id: z.string(),
   name: z.string(),
   icon: z.string().nullish(),
-  color: z.string(),
+  /** Opcional (API_CONTRACT "Pedidos do front"): sem o back mandar, mapeamos pelo nome. */
+  color: z.string().nullish(),
 });
 export type Account = z.infer<typeof accountSchema>;
 
@@ -130,6 +131,8 @@ export const goalSchema = z.object({
   icon: z.string(),
   targetCents: z.number(),
   savedCents: z.number(),
+  /** Quanto guardar por vez. Nulo = gerado (target/10). */
+  installmentCents: z.number().nullable().default(null),
   steps: z.number().default(10),
   currentStep: z.number(),
   chestsOpened: z.array(z.number()).default([]),
@@ -183,7 +186,8 @@ export const missionSchema = z.object({
   xp: z.number(),
   coins: z.number(),
   claimed: z.boolean(),
-  unit: z.enum(["count", "cents"]),
+  /** Opcional (API_CONTRACT "Pedidos do front"): sem o back mandar, deduzimos por `target >= 1000`. */
+  unit: z.enum(["count", "cents"]).nullish(),
 });
 export type Mission = z.infer<typeof missionSchema>;
 

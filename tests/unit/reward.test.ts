@@ -88,6 +88,24 @@ describe("handleReward", () => {
     handleReward(reward({ xp: 0, coins: 0 }));
     expect(useAppStore.getState().toast).toBeNull();
   });
+
+  it("não duplica a fila quando a mesma conquista é aberta manualmente (Perfil) e pelo reward", () => {
+    // Referências diferentes, mesma conquista: simula clicar na medalha recém-desbloqueada
+    // no Perfil (achievements.data) enquanto o timer automático do reward ainda não disparou.
+    const fromProfile = { key: "cofrinho", title: "Cofrinho", description: "Guardou na 1ª meta", icon: "savings" };
+    const fromReward = { key: "cofrinho", title: "Cofrinho", description: "Guardou na 1ª meta", icon: "savings" };
+
+    useAppStore.getState().openModal({ kind: "conquista", achievement: fromProfile });
+    handleReward(reward({ achievements: [fromReward] }));
+    vi.advanceTimersByTime(ACHIEVEMENT_DELAY);
+
+    const s = useAppStore.getState();
+    expect(s.modal).toEqual({ kind: "conquista", achievement: fromProfile });
+    expect(s.modalQueue).toEqual([]);
+
+    s.closeModal();
+    expect(useAppStore.getState().modal).toBeNull();
+  });
 });
 
 describe("unwrapReward", () => {

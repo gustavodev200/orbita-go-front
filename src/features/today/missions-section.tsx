@@ -18,8 +18,10 @@ import { cn } from "@/lib/utils";
 import { useClaimMission, useMissions, useStreak } from "@/features/gamification/hooks";
 import { useAppStore } from "@/stores/app-store";
 
-function isMoney(m: Mission) {
-  return m.unit === "cents";
+/** API_CONTRACT "Pedidos do front": sem `unit` do back, deduzimos por target >= 1000
+ * (cobre a missão "gastar-pouco", cujo alvo é em centavos). Exportada para teste. */
+export function isMoney(m: Mission) {
+  return m.unit ? m.unit === "cents" : m.target >= 1000;
 }
 
 function progressLabel(m: Mission) {
