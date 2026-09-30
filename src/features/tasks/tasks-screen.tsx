@@ -14,6 +14,8 @@ import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { useUpdateMe } from "@/features/me/hooks";
+import { usePushSubscription } from "@/features/push/use-push-subscription";
 import type { Priority, Task } from "@/lib/api/schemas";
 import { PRIORITY_COLOR, PRIORITY_LABEL } from "@/lib/colors";
 import { addDaysISO, formatDM, todayISO } from "@/lib/dates";
@@ -132,6 +134,23 @@ function taskToChipsState(task: Task, today: string): TaskChipsState {
 }
 
 function TaskChipsFields({ state, onChange }: { state: TaskChipsState; onChange: (p: Partial<TaskChipsState>) => void }) {
+  const push = usePushSubscription();
+  const updateMe = useUpdateMe();
+
+  // Ativar o lembrete sem nunca ter passado pelo Perfil deixava a notificação
+  // "muda": a task salvava o horário mas nenhuma subscription existia pra
+  // receber o push. Pede permissão/assina aqui também, no momento em que o
+  // lembrete nasce.
+  const toggleReminder = () => {
+    const next = !state.reminder;
+    onChange({ reminder: next });
+    if (next) {
+      void push.subscribe().then((ok) => {
+        if (ok) updateMe.mutate({ notificationsEnabled: true });
+      });
+    }
+  };
+
   return (
     <div className="flex flex-wrap gap-1.5">
       {WHEN.map((w) => (
@@ -161,7 +180,7 @@ function TaskChipsFields({ state, onChange }: { state: TaskChipsState; onChange:
       <button
         type="button"
         aria-pressed={state.reminder}
-        onClick={() => onChange({ reminder: !state.reminder })}
+        onClick={toggleReminder}
         className={cn(
           "flex h-[34px] items-center gap-1 rounded-[10px] border-2 px-2.5 font-display text-[13px] leading-none font-extrabold",
           state.reminder ? "bg-bs text-bdk" : "border-bd bg-sf text-mut",
