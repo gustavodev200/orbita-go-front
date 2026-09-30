@@ -1,4 +1,4 @@
-# órbitaGO — frontend
+# órbitaGO — frontend Next.js
 
 Web app pessoal gamificado de **finanças + tarefas** (mobile-first 390→1440px, pt-BR, BRL).
 Next.js 16 (App Router) · Tailwind v4 · shadcn/ui (Radix) · framer-motion · TanStack Query · Zustand · Zod · Supabase Auth (Google) via `@supabase/ssr`.
@@ -48,7 +48,7 @@ regras de segurança já prontos.
 
 ## Índice
 
-- [órbitaGO — frontend](#órbitago--frontend)
+- [órbitaGO — frontend Next.js](#órbitago--frontend-nextjs)
   - [Setup](#setup)
   - [Scripts](#scripts)
   - [Estrutura](#estrutura)
