@@ -11,6 +11,17 @@ function isPushSupported(): boolean {
   return typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window;
 }
 
+/** iPhone/iPad — no Safari, a Push API só existe quando o site roda instalado (Tela de Início). */
+function isIOS(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+function isStandalone(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(display-mode: standalone)").matches || (window.navigator as { standalone?: boolean }).standalone === true;
+}
+
 /**
  * Assina/cancela Web Push no navegador atual. Não mexe em `Me` nem no switch
  * — quem chama decide o que fazer com o resultado (ver `ProfileScreen`).
@@ -20,7 +31,14 @@ export function usePushSubscription() {
 
   const subscribe = useCallback(async (): Promise<boolean> => {
     if (!isPushSupported()) {
-      toast.error("Este navegador não suporta notificações push.");
+      if (isIOS() && !isStandalone()) {
+        toast.error(
+          "No iPhone, notificações só funcionam com o app instalado. Toque em Compartilhar → \"Adicionar à Tela de Início\", abra o órbitaGO por esse ícone e tente de novo.",
+          { duration: 8000 },
+        );
+      } else {
+        toast.error("Este navegador não suporta notificações push.");
+      }
       return false;
     }
     if (!env.vapidPublicKey) {
