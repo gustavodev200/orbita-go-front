@@ -68,8 +68,10 @@ function StreakPill({ value, tinted, className, title = "Ofensiva" }: PillProps)
     <div
       title={title}
       className={cn(
-        "flex h-[38px] items-center gap-[3px] rounded-xl px-2.5 font-display text-[17px] leading-none font-black text-o",
-        tinted && "h-10 bg-os text-lg",
+        // <400px: streak de 3 dígitos + moedas de 4 dígitos podem colidir no
+        // header — px mais justo ali; 390px+ (min-[400px]) fica como já era.
+        "flex h-[38px] items-center gap-[3px] rounded-xl px-2 font-display text-[17px] leading-none font-black text-o min-[400px]:px-2.5",
+        tinted && "h-10 bg-os px-2.5 text-lg",
         className,
       )}
     >
@@ -85,7 +87,7 @@ function CoinPill({ value, tinted, className, title = "Moedas" }: PillProps) {
     <div
       title={title}
       className={cn(
-        "flex h-[38px] items-center gap-[5px] rounded-xl px-2 font-display text-[17px] leading-none font-black text-yd",
+        "flex h-[38px] items-center gap-[5px] rounded-xl px-1.5 font-display text-[17px] leading-none font-black text-yd min-[400px]:px-2",
         tinted && "h-10 gap-1.5 bg-ys px-3 text-lg",
         className,
       )}

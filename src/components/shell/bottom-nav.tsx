@@ -38,7 +38,9 @@ export function BottomNav() {
   const openTxSheet = useAppStore((s) => s.openTxSheet);
   const [hoje, fin, tar, , perfil] = NAV_ITEMS;
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 grid h-[78px] grid-cols-5 items-center border-t-2 border-bd bg-sf px-1.5 pb-2 lg:hidden">
+    <nav
+      className="fixed inset-x-0 bottom-0 z-30 grid min-h-[78px] grid-cols-5 items-center border-t-2 border-bd bg-sf pb-[calc(0.5rem+env(safe-area-inset-bottom))] pl-[calc(0.375rem+env(safe-area-inset-left))] pr-[calc(0.375rem+env(safe-area-inset-right))] lg:hidden"
+    >
       <NavButton item={hoje} active={isActive(pathname, hoje.href)} />
       <NavButton item={fin} active={isActive(pathname, fin.href)} />
       <div className="flex justify-center">

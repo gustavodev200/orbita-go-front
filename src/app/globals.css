@@ -211,6 +211,9 @@
   body {
     font-family: var(--font-sans);
     -webkit-tap-highlight-color: transparent;
+    /* Rede de segurança contra telas estreitas (360–375px): nada deve
+       forçar scroll horizontal na página, mesmo se algum filho escapar. */
+    overflow-x: hidden;
   }
   button,
   input,

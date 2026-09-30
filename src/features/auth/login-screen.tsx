@@ -33,8 +33,12 @@ export function LoginScreen() {
     if (params.has("error")) toast.error("Não foi possível entrar com o Google. Tente de novo.");
   }, [params]);
 
-  const o1 = desktop ? 380 : 250;
-  const o2 = desktop ? 560 : 360;
+  // No mobile, o hero não tem padding e o anel ocupa a largura do device: em
+  // 360-390px, um anel de 360px deixava os tiles decorativos (que "sentam"
+  // na borda do anel, ±20px) parcial ou totalmente cortados pelo
+  // `overflow-hidden`. 300/210 dão folga suficiente até 360px.
+  const o1 = desktop ? 380 : 210;
+  const o2 = desktop ? 560 : 300;
 
   async function login() {
     if (!hasSupabaseEnv()) {

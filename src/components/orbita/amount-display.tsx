@@ -13,11 +13,15 @@ const amountVariants = cva("num font-extrabold whitespace-nowrap", {
     size: {
       sm: "text-[15px] leading-none",
       md: "text-base leading-none",
-      lg: "text-[19px] leading-[1.1]",
+      // Usado lado a lado em cards de 2 colunas (resumo do mês); "−R$ 3.881,60"
+      // não cabe em 19px abaixo de ~390px de viewport — cai pra 16px só ali.
+      lg: "text-base leading-[1.1] min-[390px]:text-[19px]",
       xl: "text-[26px] leading-none",
       stat: "text-[32px] leading-none tracking-[-.02em] lg:text-[34px]",
       balance: "text-[38px] leading-[1.05] tracking-[-.03em] lg:text-[44px]",
-      hero: "text-5xl leading-none tracking-[-.03em] lg:text-[56px]",
+      // Valor gigante do Novo Lançamento: "−R$ 999.999,99" a 48px estoura a
+      // sheet abaixo de ~382px; 44px cobre 360–375px sem mudar nada a partir de 390.
+      hero: "text-[44px] leading-none tracking-[-.03em] min-[390px]:text-5xl lg:text-[56px]",
     },
   },
   defaultVariants: { size: "md" },

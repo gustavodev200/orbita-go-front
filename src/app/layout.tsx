@@ -24,6 +24,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  // Sem isso, `env(safe-area-inset-*)` resolve pra 0 mesmo em telas com notch/
+  // home indicator — o header e o bottom-nav dependem dele.
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#FBF6EE" },
     { media: "(prefers-color-scheme: dark)", color: "#161310" },

@@ -7,19 +7,22 @@ import { toast } from "sonner";
 import { AmountDisplay } from "@/components/orbita/amount-display";
 import { CategoryGridButton } from "@/components/orbita/category-chip";
 import { ChoiceChip } from "@/components/orbita/choice-chip";
-import { Cobre } from "@/components/orbita/cobre";
+// import { Cobre } from "@/components/orbita/cobre"; // TODO: reativar junto com input da IA Gemini
 import { Icon } from "@/components/orbita/icon";
 import { NumericKeypad, applyKey, type KeypadKey } from "@/components/orbita/numeric-keypad";
 import { SegmentedControl } from "@/components/orbita/segmented-control";
 import { Button, ButtonTag } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import type { Category, Frequency, ParsedTx, Transaction, TxType } from "@/lib/api/schemas";
+// import type { ParsedTx } from "@/lib/api/schemas"; // TODO: reativar junto com input da IA Gemini
+import type { Category, Frequency, Transaction, TxType } from "@/lib/api/schemas";
 import { EXPENSE_GRID, INCOME_GRID, findCategory } from "@/lib/categories";
-import { addDaysISO, diffDays, formatDM, parseDMY, parseISODate, todayISO } from "@/lib/dates";
-import { formatBRL } from "@/lib/format";
+import { addDaysISO, diffDays, parseDMY, parseISODate, todayISO } from "@/lib/dates";
+// import { formatDM } from "@/lib/dates"; // TODO: reativar junto com input da IA Gemini (usado por dateChipLabel)
+// import { formatBRL } from "@/lib/format"; // TODO: reativar junto com input da IA Gemini
 import { cn } from "@/lib/utils";
-import { useCreateTransaction, useParseTransaction, useUpdateTransaction } from "@/features/finance/hooks";
+import { useCreateTransaction, useUpdateTransaction } from "@/features/finance/hooks";
+// import { useParseTransaction } from "@/features/finance/hooks"; // TODO: reativar junto com input da IA Gemini
 import { useAccounts, useCategories } from "@/features/me/hooks";
 
 type DateMode = "hoje" | "ontem" | "esc";
@@ -38,12 +41,13 @@ function dateModeFor(iso: string, today: string): DateMode {
   return d === 0 ? "hoje" : d === 1 ? "ontem" : "esc";
 }
 
-function dateChipLabel(iso: string, today: string) {
-  const d = diffDays(iso, today);
-  if (d === 0) return `Hoje, ${formatDM(iso)}`;
-  if (d === 1) return `Ontem, ${formatDM(iso)}`;
-  return formatDM(iso);
-}
+// TODO: reativar junto com input da IA Gemini
+// function dateChipLabel(iso: string, today: string) {
+//   const d = diffDays(iso, today);
+//   if (d === 0) return `Hoje, ${formatDM(iso)}`;
+//   if (d === 1) return `Ontem, ${formatDM(iso)}`;
+//   return formatDM(iso);
+// }
 
 function parseISODateDay(iso: string) {
   return parseISODate(iso).getUTCDay();
@@ -82,10 +86,11 @@ export function NewTransactionForm({
   const [frequency, setFrequency] = useState<Frequency>("monthly");
   const [dueDay, setDueDay] = useState(Number(today.slice(8, 10)) || 5);
   const [endDate, setEndDate] = useState("");
-  const [nl, setNl] = useState("");
-  const [ai, setAi] = useState<ParsedTx | null>(null);
+  // TODO: reativar junto com input da IA Gemini
+  // const [nl, setNl] = useState("");
+  // const [ai, setAi] = useState<ParsedTx | null>(null);
 
-  const parse = useParseTransaction();
+  // const parse = useParseTransaction();
   const create = useCreateTransaction(onClose);
   const update = useUpdateTransaction(onClose);
   const saving = create.isPending || update.isPending;
@@ -114,23 +119,24 @@ export function NewTransactionForm({
     return () => window.removeEventListener("keydown", onKey);
   }, [desktop]);
 
-  const runParse = () => {
-    const text = nl.trim();
-    if (!text) return;
-    parse.mutate(text, { onSuccess: (r) => setAi(r) });
-  };
+  // TODO: reativar junto com input da IA Gemini
+  // const runParse = () => {
+  //   const text = nl.trim();
+  //   if (!text) return;
+  //   parse.mutate(text, { onSuccess: (r) => setAi(r) });
+  // };
 
-  const applyAi = () => {
-    if (!ai) return;
-    setType(ai.type);
-    setCents(ai.amountCents);
-    setCategoryKey(ai.categoryKey);
-    setDesc(ai.description);
-    const iso = ai.date.slice(0, 10);
-    setDate(iso);
-    setDateMode(dateModeFor(iso, today));
-    setAi(null);
-  };
+  // const applyAi = () => {
+  //   if (!ai) return;
+  //   setType(ai.type);
+  //   setCents(ai.amountCents);
+  //   setCategoryKey(ai.categoryKey);
+  //   setDesc(ai.description);
+  //   const iso = ai.date.slice(0, 10);
+  //   setDate(iso);
+  //   setDateMode(dateModeFor(iso, today));
+  //   setAi(null);
+  // };
 
   const pickDate = (mode: DateMode) => {
     setDateMode(mode);
@@ -168,7 +174,7 @@ export function NewTransactionForm({
   };
 
   const weekly = frequency === "weekly";
-  const aiCat = ai ? findCategory(categories, ai.categoryKey) : null;
+  // const aiCat = ai ? findCategory(categories, ai.categoryKey) : null; // TODO: reativar junto com input da IA Gemini
 
   return (
     <>
@@ -186,6 +192,7 @@ export function NewTransactionForm({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-auto px-4 pt-1 pb-4">
+        {/* TODO: reativar junto com input da IA Gemini
         {!editing ? (
           <Input
             tone="ai"
@@ -247,6 +254,7 @@ export function NewTransactionForm({
             </motion.div>
           ) : null}
         </AnimatePresence>
+        */}
 
         <SegmentedControl<TxType>
           variant="solid"

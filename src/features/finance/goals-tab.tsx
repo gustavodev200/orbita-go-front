@@ -39,7 +39,7 @@ function goalSubtitle(g: Goal): string {
 /** Grade 6 col de ícones da meta (onboarding e nova meta). */
 export function GoalIconPicker({ value, onChange }: { value: string; onChange: (icon: string) => void }) {
   return (
-    <div className="grid grid-cols-6 gap-2">
+    <div className="grid grid-cols-6 gap-1.5 min-[400px]:gap-2">
       {GOAL_ICONS.map((i) => {
         const on = i === value;
         return (

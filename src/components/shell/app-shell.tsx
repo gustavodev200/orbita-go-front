@@ -56,7 +56,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <div className="relative flex min-w-0 flex-1 flex-col">
         <AppHeader />
-        <main className="flex-1 pb-[78px] lg:pb-0">
+        <main className="flex-1 pb-[calc(78px+env(safe-area-inset-bottom))] lg:pb-0">
           <div className="mx-auto max-w-[1160px] px-3.5 pt-4 pb-7 lg:px-8 lg:pt-7 lg:pb-12">{children}</div>
         </main>
         <BottomNav />

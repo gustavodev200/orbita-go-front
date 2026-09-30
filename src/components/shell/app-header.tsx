@@ -23,7 +23,7 @@ export function AppHeader() {
   const xpPct = me ? Math.round((me.xp / (me.xpToNext || 1500)) * 100) : 0;
 
   return (
-    <header className="sticky top-0 z-30 flex h-[60px] shrink-0 items-center gap-1 border-b-2 border-bd bg-bg px-3 lg:h-[72px] lg:gap-2.5 lg:px-8">
+    <header className="sticky top-0 z-30 flex h-[60px] shrink-0 items-center gap-1 border-b-2 border-bd bg-bg pl-[calc(0.75rem+env(safe-area-inset-left))] pr-[calc(0.75rem+env(safe-area-inset-right))] lg:h-[72px] lg:gap-2.5 lg:pl-8 lg:pr-8">
       <Link href="/" aria-label="órbitaGO — Hoje" className="lg:hidden">
         <LogoMark size={30} />
       </Link>
@@ -31,9 +31,9 @@ export function AppHeader() {
       <div className="flex-1" />
       <StreakPill value={me?.streak ?? 0} />
       <CoinPill value={me?.coins ?? 0} />
-      <div title="Nível" className="flex h-[38px] items-center gap-2 px-1.5">
+      <div title="Nível" className="flex h-[38px] items-center gap-1.5 px-1 min-[400px]:gap-2 min-[400px]:px-1.5">
         <LevelBadge level={me?.level ?? 1} />
-        <Progress value={xpPct} tone="y" size="xs" className="w-11 lg:w-24" aria-label="XP do nível" />
+        <Progress value={xpPct} tone="y" size="xs" className="w-9 min-[400px]:w-11 lg:w-24" aria-label="XP do nível" />
       </div>
       <Link
         href="/lembretes"
