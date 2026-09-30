@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Task } from "@/lib/api/schemas";
 import { gamificationKeys } from "@/features/gamification/api";
 import { useApiMutation, useRewardedMutation } from "@/features/rewards/use-api-mutation";
-import { completeTask, createTask, getTasks, taskKeys, uncompleteTask, type TaskInput } from "./api";
+import { completeTask, createTask, deleteTask, getTasks, taskKeys, uncompleteTask, updateTask, type TaskInput } from "./api";
 
 export function useTasks() {
   return useQuery({ queryKey: taskKeys.all, queryFn: getTasks });
@@ -13,6 +13,18 @@ export function useTasks() {
 
 export function useCreateTask() {
   return useApiMutation({ mutationFn: (input: TaskInput) => createTask(input), invalidate: [taskKeys.all] });
+}
+
+export function useUpdateTask(onDone?: () => void) {
+  return useApiMutation({
+    mutationFn: ({ id, input }: { id: string; input: Partial<TaskInput> }) => updateTask(id, input),
+    invalidate: [taskKeys.all],
+    onSuccess: () => onDone?.(),
+  });
+}
+
+export function useDeleteTask() {
+  return useApiMutation({ mutationFn: (id: string) => deleteTask(id), invalidate: [taskKeys.all] });
 }
 
 /** Marca/desmarca com update otimista (o check anima na hora). */

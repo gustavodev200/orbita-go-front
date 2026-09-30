@@ -8,14 +8,17 @@ import { ChoiceChip } from "@/components/orbita/choice-chip";
 import { Icon } from "@/components/orbita/icon";
 import { ProgressRing } from "@/components/orbita/medal";
 import { EmptyState, QueryState } from "@/components/orbita/states";
+import { FieldLabel, PanelBody, PanelFooter, PanelHeader } from "@/components/orbita/panel";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Dialog } from "@/components/ui/dialog";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import type { Priority, Task } from "@/lib/api/schemas";
 import { PRIORITY_COLOR, PRIORITY_LABEL } from "@/lib/colors";
 import { addDaysISO, formatDM, todayISO } from "@/lib/dates";
 import { cn } from "@/lib/utils";
-import { useCreateTask, useTasks, useToggleTask } from "./hooks";
+import { useCreateTask, useDeleteTask, useTasks, useToggleTask, useUpdateTask } from "./hooks";
 
 type When = "hoje" | "amanha" | "prox" | "sem";
 const WHEN: { value: When; label: string }[] = [
@@ -44,12 +47,15 @@ function dueFor(when: When, today: string): string | null {
 function reminderLabel(reminderAt: string, today: string) {
   const date = reminderAt.slice(0, 10);
   const time = reminderAt.length >= 16 ? reminderAt.slice(11, 16) : "";
-  return date === today && time ? time : formatDM(date);
+  if (!time) return formatDM(date);
+  return date === today ? time : `${formatDM(date)} ${time}`;
 }
 
 function TaskRow({ task, first, onToggle }: { task: Task; first: boolean; onToggle: (t: Task) => void }) {
   const [just, setJust] = useState(0);
+  const [editing, setEditing] = useState(false);
   const today = todayISO();
+  const del = useDeleteTask();
   return (
     <motion.div
       className={cn("relative flex items-center gap-3.5 px-4 py-3.5", !first && "border-t-2 border-sf2")}
@@ -79,6 +85,24 @@ function TaskRow({ task, first, onToggle }: { task: Task; first: boolean; onTogg
       <div className={cn("rounded-[7px] bg-ys px-[7px] py-1 font-display text-xs leading-none font-black text-yd", task.done && "opacity-35")}>
         +5 XP
       </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          aria-label="Opções"
+          className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-transparent text-mut outline-none data-[state=open]:bg-sf2"
+        >
+          <Icon name="more_vert" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="left" align="start">
+          <DropdownMenuItem tone="info" onSelect={() => setEditing(true)}>
+            <Icon name="edit" />
+            Editar
+          </DropdownMenuItem>
+          <DropdownMenuItem tone="danger" disabled={del.isPending} onSelect={() => del.mutate(task.id)}>
+            <Icon name="delete" />
+            Excluir
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       <AnimatePresence>
         {just ? (
           <motion.div
@@ -93,24 +117,93 @@ function TaskRow({ task, first, onToggle }: { task: Task; first: boolean; onTogg
           </motion.div>
         ) : null}
       </AnimatePresence>
+      {editing ? <EditTaskDialog task={task} open={editing} onOpenChange={setEditing} /> : null}
     </motion.div>
   );
 }
 
+/** Campos comuns a "Nova tarefa" e "Editar tarefa" (quando, prioridade, lembrete + horário). */
+type TaskChipsState = { when: When; priority: Priority; reminder: boolean; reminderTime: string };
+const EMPTY_TASK_CHIPS: TaskChipsState = { when: "hoje", priority: "medium", reminder: false, reminderTime: "09:00" };
+
+function taskToChipsState(task: Task, today: string): TaskChipsState {
+  const time = task.reminderAt && task.reminderAt.length >= 16 ? task.reminderAt.slice(11, 16) : "09:00";
+  return { when: groupOf(task, today), priority: task.priority, reminder: !!task.reminderAt, reminderTime: time };
+}
+
+function TaskChipsFields({ state, onChange }: { state: TaskChipsState; onChange: (p: Partial<TaskChipsState>) => void }) {
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {WHEN.map((w) => (
+        <ChoiceChip key={w.value} variant="greenMuted" size="xs" selected={state.when === w.value} onClick={() => onChange({ when: w.value })}>
+          {w.label}
+        </ChoiceChip>
+      ))}
+      <div className="mx-1 w-0.5 bg-bd" />
+      {PRIORITIES.map((p) => (
+        <button
+          key={p}
+          type="button"
+          title={PRIORITY_LABEL[p]}
+          aria-pressed={state.priority === p}
+          onClick={() => onChange({ priority: p })}
+          className="flex h-[34px] items-center gap-1 rounded-[10px] border-2 px-2.5 font-display text-[13px] leading-none font-extrabold"
+          style={{
+            borderColor: state.priority === p ? PRIORITY_COLOR[p] : "var(--bd)",
+            background: state.priority === p ? "var(--sf2)" : "var(--sf)",
+            color: PRIORITY_COLOR[p],
+          }}
+        >
+          <Icon name="flag" size={18} />
+          {PRIORITY_LABEL[p]}
+        </button>
+      ))}
+      <button
+        type="button"
+        aria-pressed={state.reminder}
+        onClick={() => onChange({ reminder: !state.reminder })}
+        className={cn(
+          "flex h-[34px] items-center gap-1 rounded-[10px] border-2 px-2.5 font-display text-[13px] leading-none font-extrabold",
+          state.reminder ? "bg-bs text-bdk" : "border-bd bg-sf text-mut",
+        )}
+        style={state.reminder ? { borderColor: "var(--b)" } : undefined}
+      >
+        <Icon name="alarm" size={18} />
+        Lembrete
+      </button>
+      {state.reminder ? (
+        <Input
+          type="time"
+          tone="muted"
+          size="md"
+          containerClassName="h-[34px] w-[110px] rounded-[10px] px-2"
+          value={state.reminderTime}
+          onChange={(e) => onChange({ reminderTime: e.target.value })}
+          aria-label="Horário do lembrete"
+          className="text-[13px]"
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function reminderAtFrom(dueDate: string | null, today: string, state: TaskChipsState): string | null {
+  return state.reminder ? `${dueDate ?? today}T${state.reminderTime}:00-03:00` : null;
+}
+
 function QuickCreate() {
   const [draft, setDraft] = useState("");
-  const [when, setWhen] = useState<When>("hoje");
-  const [priority, setPriority] = useState<Priority>("medium");
-  const [reminder, setReminder] = useState(false);
+  const [chips, setChips] = useState<TaskChipsState>(EMPTY_TASK_CHIPS);
   const create = useCreateTask();
   const today = todayISO();
+  const patchChips = (p: Partial<TaskChipsState>) => setChips((s) => ({ ...s, ...p }));
 
   const add = () => {
     const title = draft.trim();
     if (!title) return;
-    const dueDate = dueFor(when, today);
+    const dueDate = dueFor(chips.when, today);
     create.mutate(
-      { title, dueDate, priority, reminderAt: reminder ? `${dueDate ?? today}T09:00:00-03:00` : null },
+      { title, dueDate, priority: chips.priority, reminderAt: reminderAtFrom(dueDate, today, chips) },
       { onSuccess: () => setDraft("") },
     );
   };
@@ -134,46 +227,52 @@ function QuickCreate() {
           <Icon name="arrow_upward" />
         </Button>
       </div>
-      <div className="flex flex-wrap gap-1.5">
-        {WHEN.map((w) => (
-          <ChoiceChip key={w.value} variant="greenMuted" size="xs" selected={when === w.value} onClick={() => setWhen(w.value)}>
-            {w.label}
-          </ChoiceChip>
-        ))}
-        <div className="mx-1 w-0.5 bg-bd" />
-        {PRIORITIES.map((p) => (
-          <button
-            key={p}
-            type="button"
-            title={PRIORITY_LABEL[p]}
-            aria-pressed={priority === p}
-            onClick={() => setPriority(p)}
-            className="flex h-[34px] items-center gap-1 rounded-[10px] border-2 px-2.5 font-display text-[13px] leading-none font-extrabold"
-            style={{
-              borderColor: priority === p ? PRIORITY_COLOR[p] : "var(--bd)",
-              background: priority === p ? "var(--sf2)" : "var(--sf)",
-              color: PRIORITY_COLOR[p],
-            }}
-          >
-            <Icon name="flag" size={18} />
-            {PRIORITY_LABEL[p]}
-          </button>
-        ))}
-        <button
-          type="button"
-          aria-pressed={reminder}
-          onClick={() => setReminder((r) => !r)}
-          className={cn(
-            "flex h-[34px] items-center gap-1 rounded-[10px] border-2 px-2.5 font-display text-[13px] leading-none font-extrabold",
-            reminder ? "bg-bs text-bdk" : "border-bd bg-sf text-mut",
-          )}
-          style={reminder ? { borderColor: "var(--b)" } : undefined}
-        >
-          <Icon name="alarm" size={18} />
-          Lembrete
-        </button>
-      </div>
+      <TaskChipsFields state={chips} onChange={patchChips} />
     </Card>
+  );
+}
+
+function EditTaskDialog({ task, open, onOpenChange }: { task: Task; open: boolean; onOpenChange: (open: boolean) => void }) {
+  const today = todayISO();
+  const [title, setTitle] = useState(task.title);
+  const [chips, setChips] = useState<TaskChipsState>(() => taskToChipsState(task, today));
+  const patchChips = (p: Partial<TaskChipsState>) => setChips((s) => ({ ...s, ...p }));
+  const update = useUpdateTask(() => onOpenChange(false));
+
+  const save = () => {
+    const t = title.trim();
+    if (!t) return;
+    const dueDate = dueFor(chips.when, today);
+    update.mutate({
+      id: task.id,
+      input: { title: t, dueDate, priority: chips.priority, reminderAt: reminderAtFrom(dueDate, today, chips) },
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange} title="Editar tarefa">
+      <PanelHeader title="Editar tarefa" onClose={() => onOpenChange(false)} />
+      <PanelBody>
+        <Input
+          size="hero"
+          tone="raised"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Nome da tarefa"
+          aria-label="Nome da tarefa"
+          className="font-display text-lg font-extrabold"
+        />
+        <div>
+          <FieldLabel>Quando, prioridade e lembrete</FieldLabel>
+          <TaskChipsFields state={chips} onChange={patchChips} />
+        </div>
+      </PanelBody>
+      <PanelFooter>
+        <Button size="lg" block disabled={!title.trim() || update.isPending} onClick={save}>
+          Salvar
+        </Button>
+      </PanelFooter>
+    </Dialog>
   );
 }
 

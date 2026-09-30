@@ -34,8 +34,8 @@ export function FinanceScreen() {
       <TabsList className="max-w-[620px] grid-cols-4">
         {TABS.map((t) => (
           <TabsTrigger key={t.value} value={t.value}>
-            <Icon name={t.icon} className="hidden lg:inline-block" />
-            {t.label}
+            <Icon name={t.icon} />
+            <span className="sr-only @min-[420px]:not-sr-only">{t.label}</span>
           </TabsTrigger>
         ))}
       </TabsList>
