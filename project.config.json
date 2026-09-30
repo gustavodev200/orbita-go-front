@@ -1,0 +1,14 @@
+{
+  "$schema": "./project.config.schema.json",
+  "project": "orbita-go-front",
+  "preset": "prisma-postgres",
+
+  "frontend": "nextjs",
+  "backend": "nestjs",
+  "database": null,
+  "auth": "supabase-auth",
+  "email": null,
+  "storage": null,
+
+  "notes": "Frontend puro do órbitaGO (finanças + tarefas gamificado). Backend externo: orbita-go-back (NestJS), contrato em ../API_CONTRACT.md, base NEXT_PUBLIC_API_URL. Auth: 'supabase-auth' só com Google (desvio pontual do preset, igual ao poupe-certo-front) via @supabase/ssr — sessão em cookie, src/proxy.ts renova sessão e protege rotas, /auth/callback troca o code PKCE. O access_token vai como Bearer pro Nest. Este repo não acessa banco nem tabelas Supabase diretamente."
+}

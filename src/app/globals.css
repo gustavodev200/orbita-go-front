@@ -1,0 +1,234 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * órbitaGO design tokens — fonte: design_handoff_orbita/README.md.
+ * Sufixo "d" = cor da sombra sólida 3D; sufixo "s" = fundo suave (tint).
+ * Os nomes curtos (--g, --sf…) são os mesmos dos protótipos .dc.html, para
+ * facilitar a conferência pixel a pixel; os nomes shadcn apontam para eles.
+ */
+:root {
+  --bg: #fbf6ee;
+  --sf: #ffffff;
+  --sf2: #f4ede2;
+  --bd: #e9dfd1;
+  --ink: #2b2520;
+  --mut: #7d7064;
+  --g: #20b878;
+  --gd: #149160;
+  --gs: #e1f6ec;
+  --o: #ff8a1e;
+  --od: #d96a00;
+  --os: #fff0e0;
+  --y: #ffc21f;
+  --yd: #d39500;
+  --ys: #fff5d4;
+  --r: #ee5a4f;
+  --rd: #c43e34;
+  --rs: #fde8e5;
+  --b: #2e8bef;
+  --bdk: #1b6ac6;
+  --bs: #e3effd;
+  --p: #8b5cf6;
+  --pd: #6a3fd6;
+  --ps: #efe8fe;
+  --boss: #2b1f4a;
+
+  /* Categorias — fixas nos dois temas */
+  --cat-alimentacao: #ff8a1e;
+  --cat-mercado: #20b878;
+  --cat-transporte: #2e8bef;
+  --cat-casa: #8b5cf6;
+  --cat-lazer: #ec4e9c;
+  --cat-saude: #ee5a4f;
+  --cat-assinaturas: #12b3c4;
+  --cat-educacao: #d39500;
+  --cat-pets: #b5703a;
+  --cat-roupas: #6a7bd8;
+  --cat-salario: #2e8bef;
+  --cat-freela: #20b878;
+  --cat-outros: #9a8c7e;
+
+  /* Aliases shadcn */
+  --background: var(--bg);
+  --foreground: var(--ink);
+  --card: var(--sf);
+  --card-foreground: var(--ink);
+  --popover: var(--sf);
+  --popover-foreground: var(--ink);
+  --primary: var(--g);
+  --primary-foreground: #ffffff;
+  --secondary: var(--sf2);
+  --secondary-foreground: var(--ink);
+  --muted: var(--sf2);
+  --muted-foreground: var(--mut);
+  --accent: var(--sf2);
+  --accent-foreground: var(--ink);
+  --destructive: var(--r);
+  --border: var(--bd);
+  --input: var(--bd);
+  --ring: var(--g);
+  --radius: 1rem;
+}
+
+.dark {
+  --bg: #161310;
+  --sf: #221e1a;
+  --sf2: #2c2722;
+  --bd: #3a332c;
+  --ink: #f6f0e7;
+  --mut: #aa9e91;
+  --gs: #15352a;
+  --os: #3a2614;
+  --ys: #3a3014;
+  --rs: #3e1f1c;
+  --bs: #15283e;
+  --ps: #2a2140;
+  --boss: #1e1633;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-sf: var(--sf);
+  --color-sf2: var(--sf2);
+  --color-bd: var(--bd);
+  --color-ink: var(--ink);
+  --color-mut: var(--mut);
+  --color-g: var(--g);
+  --color-gd: var(--gd);
+  --color-gs: var(--gs);
+  --color-o: var(--o);
+  --color-od: var(--od);
+  --color-os: var(--os);
+  --color-y: var(--y);
+  --color-yd: var(--yd);
+  --color-ys: var(--ys);
+  --color-r: var(--r);
+  --color-rd: var(--rd);
+  --color-rs: var(--rs);
+  --color-b: var(--b);
+  --color-bdk: var(--bdk);
+  --color-bs: var(--bs);
+  --color-p: var(--p);
+  --color-pd: var(--pd);
+  --color-ps: var(--ps);
+  --color-boss: var(--boss);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-figtree), system-ui, sans-serif;
+  --font-display: var(--font-nunito), system-ui, sans-serif;
+
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-3xl: 28px;
+
+  --animate-shimmer: orb-shimmer 1.3s linear infinite;
+  --animate-spin-slow: orb-spin 60s linear infinite;
+  --animate-spin-slower-reverse: orb-spin-r 90s linear infinite;
+  --animate-rays: orb-spin 18s linear infinite;
+  --animate-dots: orb-dots 1s infinite;
+}
+
+@keyframes orb-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes orb-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes orb-spin-r {
+  to { transform: rotate(-360deg); }
+}
+@keyframes orb-dots {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 1; }
+}
+
+/* Superfície "card 3D": borda 2px com base 5px, sem drop shadow. */
+@utility card-3d {
+  background: var(--sf);
+  border-style: solid;
+  border-width: 2px 2px 5px;
+}
+
+/* Números: Figtree tabular. */
+@utility num {
+  font-family: var(--font-figtree), system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Ícones Material Symbols Rounded preenchidos (FILL 1, wght 600). */
+.material-symbols-rounded {
+  font-family: "Material Symbols Rounded";
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "liga";
+  font-variation-settings: "FILL" 1, "wght" 600, "GRAD" 0, "opsz" 24;
+  user-select: none;
+}
+
+@layer base {
+  * {
+    border-color: var(--bd);
+  }
+  html,
+  body {
+    background: var(--bg);
+    color: var(--ink);
+  }
+  body {
+    font-family: var(--font-sans);
+    -webkit-tap-highlight-color: transparent;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font-family: inherit;
+  }
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+  a {
+    color: var(--gd);
+  }
+  a:hover {
+    color: var(--g);
+  }
+  :focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--g) 55%, transparent);
+    outline-offset: 2px;
+  }
+}

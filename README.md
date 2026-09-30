@@ -1,3 +1,42 @@
+# órbitaGO — front
+
+Web app pessoal gamificado de **finanças + tarefas** (mobile-first 390→1440px, pt-BR, BRL).
+Next.js 16 (App Router) · Tailwind v4 · shadcn/ui (Radix) · framer-motion · TanStack Query · Zustand · Zod · Supabase Auth (Google) via `@supabase/ssr`.
+Backend: `orbita-go-back` (NestJS) — contrato em `../API_CONTRACT.md`.
+
+## Setup
+
+```bash
+npm install
+cp .env.example .env.local   # preencha Supabase + API
+npm run dev                  # http://localhost:3000
+```
+
+| Variável | Uso |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (ou `NEXT_PUBLIC_SUPABASE_ANON_KEY`) | chave pública |
+| `NEXT_PUBLIC_API_URL` | back Nest (dev `http://localhost:3333`) |
+| `NEXT_PUBLIC_SITE_URL` | origem usada no redirect do OAuth (opcional; padrão = origem atual) |
+
+No Supabase: habilite o provider Google e adicione `<SITE_URL>/auth/callback` em *Redirect URLs*.
+Sem as envs o build e a vitrine `/design-system` funcionam; o login fica desabilitado.
+
+## Scripts
+
+`npm run build` · `npm run lint` · `npm test` (vitest) · `npm run test:e2e` (playwright).
+
+## Estrutura
+
+- `src/app/` — rotas finas: `/login`, `/auth/callback`, `/onboarding`, grupo `(app)` com `/`, `/financas`, `/tarefas`, `/lembretes`, `/perfil`; `/design-system` (vitrine).
+- `src/proxy.ts` — renova a sessão Supabase e protege rotas; onboarding é checado no client (`me.onboarded`).
+- `src/components/{ui,orbita,shell}` — design system em camadas (ver `src/components/README.md`).
+- `src/features/<domínio>/` — `api.ts` (Zod) + `hooks.ts` (react-query) + seções de tela.
+- `src/stores/app-store.ts` — `me`, tema, sidebar, toast, fila de modais, sheet de lançamento.
+- `src/features/rewards/handle-reward.ts` — ponto único para `{ data, reward }`.
+
+---
+
 # workspace-agents
 
 Workspace/template pessoal para desenvolvimento de software com agentes de
