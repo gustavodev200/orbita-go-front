@@ -31,11 +31,11 @@ export function FinanceScreen() {
       onValueChange={(v) => router.replace(`${pathname}?tab=${v}`, { scroll: false })}
       className="flex flex-col gap-[18px]"
     >
-      <TabsList className="max-w-[620px] grid-cols-4">
+      <TabsList className="max-w-[620px]">
         {TABS.map((t) => (
           <TabsTrigger key={t.value} value={t.value}>
             <Icon name={t.icon} />
-            <span className="sr-only group-data-[state=active]:not-sr-only @min-[420px]:not-sr-only">{t.label}</span>
+            <span className="sr-only min-w-0 truncate group-data-[state=active]:not-sr-only">{t.label}</span>
           </TabsTrigger>
         ))}
       </TabsList>

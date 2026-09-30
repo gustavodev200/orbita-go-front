@@ -11,7 +11,7 @@ const Tabs = TabsPrimitive.Root;
 function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
   return (
     <TabsPrimitive.List
-      className={cn("@container grid auto-cols-fr grid-flow-col gap-1.5 rounded-[18px] bg-sf2 p-1.5", className)}
+      className={cn("@container flex items-center gap-1.5 rounded-[18px] bg-sf2 p-1.5", className)}
       {...props}
     />
   );
@@ -22,7 +22,8 @@ function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPr
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        "group flex h-11 min-w-0 items-center justify-center gap-1.5 rounded-[13px] border-2 border-transparent px-1",
+        "group flex h-11 min-w-0 shrink-0 items-center justify-center gap-1.5 rounded-[13px] border-2 border-transparent px-2.5",
+        "data-[state=active]:flex-1",
         "font-display text-[13px] leading-none font-black tracking-[.02em] text-mut lg:text-[15px]",
         "transition-colors data-[state=active]:border-bd data-[state=active]:border-b-4 data-[state=active]:bg-sf data-[state=active]:text-g",
         "[&_.material-symbols-rounded]:text-xl",
