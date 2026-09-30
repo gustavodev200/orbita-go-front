@@ -35,7 +35,7 @@ export function FinanceScreen() {
         {TABS.map((t) => (
           <TabsTrigger key={t.value} value={t.value}>
             <Icon name={t.icon} />
-            <span className="sr-only @min-[420px]:not-sr-only">{t.label}</span>
+            <span className="sr-only group-data-[state=active]:not-sr-only @min-[420px]:not-sr-only">{t.label}</span>
           </TabsTrigger>
         ))}
       </TabsList>
