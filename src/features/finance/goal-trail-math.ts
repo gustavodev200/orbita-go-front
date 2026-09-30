@@ -87,17 +87,22 @@ export function chestStepsFor(steps: number): number[] {
  * sempre tem pelo menos 1 data. Espelha `scheduleDatesOf` do back.
  */
 export function scheduleDatesOf(trailStartDate: string, deadline: string, frequency: GoalFrequency): string[] {
-  function next(day: string): string {
-    if (frequency === "weekly") return addDaysISO(day, 7);
-    if (frequency === "biweekly") return addDaysISO(day, 15);
-    return addMonthsISO(day, 1);
+  // Mensal soma sempre a partir da âncora original (não encadeia a partir do
+  // resultado anterior) — senão um mês curto que clampa o dia (31→28 em
+  // fev) deixaria os meses seguintes presos em 28 pra sempre.
+  function occurrence(n: number): string {
+    if (frequency === "weekly") return addDaysISO(trailStartDate, n * 7);
+    if (frequency === "biweekly") return addDaysISO(trailStartDate, n * 15);
+    return addMonthsISO(trailStartDate, n);
   }
 
   const dates: string[] = [];
-  let cur = next(trailStartDate);
+  let n = 1;
+  let cur = occurrence(n);
   while (cur < deadline) {
     dates.push(cur);
-    cur = next(cur);
+    n += 1;
+    cur = occurrence(n);
   }
   dates.push(deadline);
   return dates;

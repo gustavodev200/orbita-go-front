@@ -151,6 +151,10 @@ describe("scheduleDatesOf", () => {
   it("prazo já vencido: sempre pelo menos 1 data (o prazo)", () => {
     expect(scheduleDatesOf("2026-09-30", "2026-09-30", "monthly")).toEqual(["2026-09-30"]);
   });
+
+  it('mensal: dia 31 não fica "preso" em 28 depois de atravessar fevereiro', () => {
+    expect(scheduleDatesOf("2026-01-31", "2026-05-31", "monthly")).toEqual(["2026-02-28", "2026-03-31", "2026-04-30", "2026-05-31"]);
+  });
 });
 
 describe("hasDateSchedule", () => {

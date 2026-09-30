@@ -76,7 +76,8 @@ function Chest({ opened }: { opened: boolean }) {
 
 /**
  * Trilha vertical da meta: nós 72×66 (feito/atual/bloqueado), troféu no fim,
- * baús após os nós 3 e 7. O nó atual pulsa e tem o balão "Guardar R$ X".
+ * baús em ~30%/~70% do caminho (`chestStepsFor`). O nó atual pulsa e tem o
+ * balão "Guardar R$ X".
  */
 export function GoalTrail({ goal, onSave, saving }: { goal: Goal; onSave: (amountCents: number) => void; saving?: boolean }) {
   const desktop = useIsDesktop();

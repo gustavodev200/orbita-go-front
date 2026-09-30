@@ -70,7 +70,8 @@ const INSTALLMENT_MODES: SegmentOption<InstallmentMode>[] = [
   { value: "manual", label: "Manual" },
 ];
 
-const FREQUENCY_OPTIONS: SegmentOption<GoalFrequency>[] = [
+/** "" = usuário ainda não escolheu cadência — não é o mesmo que "mensal" selecionado. */
+const FREQUENCY_OPTIONS: SegmentOption<GoalFrequency | "">[] = [
   { value: "weekly", label: "Semanal" },
   { value: "biweekly", label: "Quinzenal" },
   { value: "monthly", label: "Mensal" },
@@ -84,7 +85,8 @@ type GoalFormState = {
   deadline: string;
   installmentMode: InstallmentMode;
   installmentValue: string;
-  frequency: GoalFrequency;
+  /** "" = trilha por dinheiro (sem cadência escolhida) — só vira uma trilha por data se o usuário escolher. */
+  frequency: GoalFrequency | "";
 };
 
 const EMPTY_GOAL_FORM: GoalFormState = {
@@ -94,7 +96,7 @@ const EMPTY_GOAL_FORM: GoalFormState = {
   deadline: "",
   installmentMode: "gerar",
   installmentValue: "",
-  frequency: "monthly",
+  frequency: "",
 };
 
 /** cents → texto editável ("1234,56"), mesmo formato que maskBRLInput produz. */
@@ -110,7 +112,7 @@ function goalToFormState(g: Goal): GoalFormState {
     deadline: g.deadline ? deadlineToISODay(g.deadline) : "",
     installmentMode: g.installmentCents ? "manual" : "gerar",
     installmentValue: g.installmentCents ? centsToInputValue(g.installmentCents) : "",
-    frequency: g.frequency ?? "monthly",
+    frequency: g.frequency ?? "",
   };
 }
 
@@ -169,7 +171,7 @@ function GoalFields({
       </div>
       {state.deadline ? (
         <div>
-          <FieldLabel>Com que frequência você vai guardar?</FieldLabel>
+          <FieldLabel>Com que frequência você vai guardar? (opcional)</FieldLabel>
           <SegmentedControl
             value={state.frequency}
             onChange={(frequency) => onChange({ frequency })}
@@ -177,7 +179,9 @@ function GoalFields({
             ariaLabel="Frequência dos aportes"
           />
           <div className="mt-2 text-[13px] leading-[1.4] font-semibold text-mut">
-            A trilha vai mostrar 1 marco pra cada aporte, com a data, até {formatDeadline(state.deadline)}.
+            {state.frequency
+              ? `A trilha vai mostrar 1 marco pra cada aporte, com a data, até ${formatDeadline(state.deadline)}.`
+              : "Escolha uma cadência pra trilha mostrar a data de cada aporte. Sem escolher, a trilha continua dividida em 10 partes iguais."}
           </div>
         </div>
       ) : null}
@@ -257,7 +261,7 @@ function NewGoalDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpe
               targetCents: cents,
               icon: form.icon,
               deadline: form.deadline || null,
-              frequency: form.deadline ? form.frequency : null,
+              frequency: form.deadline && form.frequency ? form.frequency : null,
               installmentCents: form.installmentMode === "manual" ? installmentCents : null,
               ...(savedCents > 0 ? { savedCents } : {}),
             })
@@ -298,7 +302,7 @@ function EditGoalDialog({ goal, open, onOpenChange, onSaved }: { goal: Goal; ope
                 targetCents: cents,
                 icon: form.icon,
                 deadline: form.deadline || null,
-                frequency: form.deadline ? form.frequency : null,
+                frequency: form.deadline && form.frequency ? form.frequency : null,
                 installmentCents: form.installmentMode === "manual" ? installmentCents : null,
               },
             })
