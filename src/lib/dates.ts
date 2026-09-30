@@ -95,6 +95,25 @@ export function monthYearShort(month: string): string {
   return `${month.slice(5, 7)}/${month.slice(0, 4)}`;
 }
 
+/** Prazo de meta: "YYYY-MM-DD" passa direto; "YYYY-MM" (formato antigo) vira dia 01. */
+export function deadlineToISODay(deadline: string): string {
+  return deadline.length === 7 ? `${deadline}-01` : deadline.slice(0, 10);
+}
+
+/** Prazo de meta pra exibição: "04/11/2026". */
+export function formatDeadline(deadline: string): string {
+  return formatDMY(deadlineToISODay(deadline));
+}
+
+/** Meses inteiros entre duas datas ISO, arredondado pra cima, mínimo 1 (pra não dividir por 0). */
+export function monthsUntil(fromISO: string, toISO: string): number {
+  const [fy, fm, fd] = fromISO.slice(0, 10).split("-").map(Number);
+  const [ty, tm, td] = toISO.slice(0, 10).split("-").map(Number);
+  let months = (ty - fy) * 12 + (tm - fm);
+  if (td < fd) months -= 1;
+  return Math.max(1, months);
+}
+
 export function daysInMonth(month: string): number {
   const [y, m] = month.split("-").map(Number);
   return new Date(Date.UTC(y, m, 0)).getUTCDate();

@@ -14,10 +14,11 @@ import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import type { Goal } from "@/lib/api/schemas";
-import { monthYearShort } from "@/lib/dates";
+import { deadlineToISODay, formatDeadline, todayISO } from "@/lib/dates";
 import { formatBRL, maskBRLInput, parseBRLToCents } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useCreateGoal, useDepositGoal, useGoals, useUpdateGoal } from "@/features/finance/hooks";
+import { installmentByDeadline } from "./goal-trail-math";
 import { GoalTrail } from "./goal-trail";
 
 export const GOAL_ICONS = ["landscape", "shield", "laptop_mac", "directions_car", "home", "school"];
@@ -33,7 +34,7 @@ export const goalColor = (icon: string) => ICON_COLORS[icon] ?? "#20B878";
 
 function goalSubtitle(g: Goal): string {
   if (g.completed) return "concluída!";
-  if (g.deadline) return `até ${monthYearShort(g.deadline)}`;
+  if (g.deadline) return `até ${formatDeadline(g.deadline)}`;
   return `passo ${Math.min(g.currentStep + 1, g.steps)} de ${g.steps}`;
 }
 
@@ -84,7 +85,7 @@ function goalToFormState(g: Goal): GoalFormState {
     name: g.name,
     value: centsToInputValue(g.targetCents),
     icon: g.icon,
-    deadline: g.deadline ?? "",
+    deadline: g.deadline ? deadlineToISODay(g.deadline) : "",
     installmentMode: g.installmentCents ? "manual" : "gerar",
     installmentValue: g.installmentCents ? centsToInputValue(g.installmentCents) : "",
   };
@@ -96,8 +97,18 @@ function useGoalFormState(initial: GoalFormState = EMPTY_GOAL_FORM) {
   return [state, patch] as const;
 }
 
-function GoalFields({ state, onChange }: { state: GoalFormState; onChange: (p: Partial<GoalFormState>) => void }) {
+function GoalFields({
+  state,
+  onChange,
+  alreadySavedCents = 0,
+}: {
+  state: GoalFormState;
+  onChange: (p: Partial<GoalFormState>) => void;
+  /** Quanto já está guardado (goal.savedCents na edição; "já tenho guardado" digitado na criação) — só pra calcular a sugestão do modo "gerar". */
+  alreadySavedCents?: number;
+}) {
   const cents = parseBRLToCents(state.value);
+  const generated = installmentByDeadline(cents, alreadySavedCents, state.deadline || null, todayISO());
   return (
     <>
       <Input
@@ -125,7 +136,7 @@ function GoalFields({ state, onChange }: { state: GoalFormState; onChange: (p: P
       <div>
         <FieldLabel>Prazo (opcional)</FieldLabel>
         <Input
-          type="month"
+          type="date"
           tone="raised"
           value={state.deadline}
           onChange={(e) => onChange({ deadline: e.target.value })}
@@ -155,7 +166,9 @@ function GoalFields({ state, onChange }: { state: GoalFormState; onChange: (p: P
           />
         ) : (
           <div className="mt-2 text-[13px] leading-[1.4] font-semibold text-mut">
-            A trilha calcula o valor sugerido pra você (meta dividida em {cents > 0 ? "10 passos" : "passos iguais"}).
+            {generated != null
+              ? `Sugestão: ${formatBRL(generated, { compact: true })} por mês até ${formatDeadline(state.deadline)}.`
+              : "A trilha calcula o valor sugerido pra você (meta dividida em 10 passos)."}
           </div>
         )}
       </div>
@@ -179,7 +192,7 @@ function NewGoalDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpe
     <Dialog open={open} onOpenChange={onOpenChange} title="Nova meta">
       <PanelHeader title="Nova meta" onClose={() => onOpenChange(false)} />
       <PanelBody>
-        <GoalFields state={form} onChange={patch} />
+        <GoalFields state={form} onChange={patch} alreadySavedCents={savedCents} />
         <div>
           <FieldLabel>Já tenho guardado (opcional)</FieldLabel>
           <Input
@@ -232,7 +245,7 @@ function EditGoalDialog({ goal, open, onOpenChange, onSaved }: { goal: Goal; ope
     <Dialog open={open} onOpenChange={onOpenChange} title="Editar meta">
       <PanelHeader title="Editar meta" onClose={() => onOpenChange(false)} />
       <PanelBody>
-        <GoalFields state={form} onChange={patch} />
+        <GoalFields state={form} onChange={patch} alreadySavedCents={goal.savedCents} />
       </PanelBody>
       <PanelFooter>
         <Button

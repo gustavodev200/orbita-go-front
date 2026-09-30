@@ -1,3 +1,4 @@
+import { deadlineToISODay, monthsUntil } from "@/lib/dates";
 import type { Goal } from "@/lib/api/schemas";
 
 /** Baús depois dos nós 3 e 7 (índices 0-based 2 e 6 — design README). */
@@ -38,16 +39,35 @@ export function chestOpenedOf(goal: Pick<Goal, "completed" | "currentStep" | "st
 }
 
 /**
- * Valor sugerido no botão "Guardar" do nó atual: usa a parcela configurada
- * na meta (`installmentCents`, manual ou nula) quando fizer sentido; senão
- * cai no valor calculado por `stepAmountOf` (divisão igual em 10 passos).
- * Os marcos da trilha (labels dos nós, baús) continuam em partes iguais —
- * só a sugestão de depósito muda.
+ * Parcela sugerida quando o modo é "gerar" E a meta tem prazo (ainda não
+ * vencido): quanto falta ÷ meses restantes até a data, arredondado pra cima
+ * (nunca sugere menos do que precisa pra chegar lá a tempo). `null` quando
+ * não há prazo utilizável — aí quem chama cai no cálculo padrão (10 passos).
+ */
+export function installmentByDeadline(
+  targetCents: number,
+  savedCents: number,
+  deadline: string | null | undefined,
+  today: string,
+): number | null {
+  if (!deadline) return null;
+  const deadlineDay = deadlineToISODay(deadline);
+  if (deadlineDay <= today) return null;
+  const remaining = Math.max(0, targetCents - savedCents);
+  return Math.ceil(remaining / monthsUntil(today, deadlineDay));
+}
+
+/**
+ * Valor sugerido no botão "Guardar" do nó atual, nessa ordem: parcela manual
+ * (`installmentCents`) → parcela gerada a partir do prazo → divisão igual em
+ * 10 passos (`stepAmountOf`). Os marcos da trilha (labels dos nós, baús)
+ * continuam em partes iguais — só a sugestão de depósito muda.
  */
 export function suggestedStepAmountOf(
-  goal: Pick<Goal, "targetCents" | "steps" | "installmentCents">,
+  goal: Pick<Goal, "targetCents" | "savedCents" | "steps" | "installmentCents" | "deadline">,
   i: number,
+  today: string,
 ): number {
-  const amount = stepAmountOf(goal, i);
-  return goal.installmentCents && goal.installmentCents > 0 ? goal.installmentCents : amount;
+  if (goal.installmentCents && goal.installmentCents > 0) return goal.installmentCents;
+  return installmentByDeadline(goal.targetCents, goal.savedCents, goal.deadline, today) ?? stepAmountOf(goal, i);
 }

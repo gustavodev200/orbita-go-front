@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
 
-import { CHEST_AFTER, chestOpenedOf, currentStepOf, nodeStateOf, stepAmountOf, suggestedStepAmountOf } from "@/features/finance/goal-trail-math";
+import {
+  CHEST_AFTER,
+  chestOpenedOf,
+  currentStepOf,
+  installmentByDeadline,
+  nodeStateOf,
+  stepAmountOf,
+  suggestedStepAmountOf,
+} from "@/features/finance/goal-trail-math";
 import type { Goal } from "@/lib/api/schemas";
+
+const TODAY = "2026-01-15";
 
 function goal(over: Partial<Goal> = {}): Goal {
   return {
@@ -37,21 +47,55 @@ describe("stepAmountOf", () => {
   });
 });
 
+describe("installmentByDeadline", () => {
+  it("sem prazo, retorna null", () => {
+    expect(installmentByDeadline(500000, 150000, null, TODAY)).toBeNull();
+  });
+
+  it("prazo já vencido, retorna null (cai no cálculo padrão)", () => {
+    expect(installmentByDeadline(500000, 150000, "2026-01-01", TODAY)).toBeNull();
+  });
+
+  it("divide o que falta pelos meses restantes, arredondando pra cima", () => {
+    // falta 350000, prazo em 2026-04-15 = 3 meses exatos a partir de 2026-01-15
+    expect(installmentByDeadline(500000, 150000, "2026-04-15", TODAY)).toBe(Math.ceil(350000 / 3));
+  });
+
+  it("prazo antes do dia do mês atual conta um mês a menos (arredonda pra cima)", () => {
+    // 2026-04-10 é só 2 meses e alguns dias depois de 2026-01-15 → 2 meses inteiros
+    expect(installmentByDeadline(500000, 150000, "2026-04-10", TODAY)).toBe(Math.ceil(350000 / 2));
+  });
+
+  it("meta já vencida no mesmo mês usa no mínimo 1 mês (nunca divide por 0)", () => {
+    expect(installmentByDeadline(500000, 150000, "2026-01-20", TODAY)).toBe(350000);
+  });
+});
+
 describe("suggestedStepAmountOf", () => {
-  it("sem parcela configurada, sugere o valor calculado (divisão igual)", () => {
-    const g = goal({ targetCents: 500000, steps: 10, installmentCents: null });
-    expect(suggestedStepAmountOf(g, 0)).toBe(stepAmountOf(g, 0));
+  it("sem parcela e sem prazo, sugere o valor calculado (divisão igual)", () => {
+    const g = goal({ targetCents: 500000, steps: 10, installmentCents: null, deadline: null });
+    expect(suggestedStepAmountOf(g, 0, TODAY)).toBe(stepAmountOf(g, 0));
   });
 
   it("com parcela manual configurada, sugere a parcela em vez do valor calculado", () => {
-    const g = goal({ targetCents: 500000, steps: 10, installmentCents: 80000 });
-    expect(suggestedStepAmountOf(g, 0)).toBe(80000);
-    expect(suggestedStepAmountOf(g, 0)).not.toBe(stepAmountOf(g, 0));
+    const g = goal({ targetCents: 500000, steps: 10, installmentCents: 80000, deadline: null });
+    expect(suggestedStepAmountOf(g, 0, TODAY)).toBe(80000);
+    expect(suggestedStepAmountOf(g, 0, TODAY)).not.toBe(stepAmountOf(g, 0));
   });
 
   it("parcela zero ou negativa é ignorada (volta pro valor calculado)", () => {
-    const g = goal({ targetCents: 500000, steps: 10, installmentCents: 0 });
-    expect(suggestedStepAmountOf(g, 0)).toBe(stepAmountOf(g, 0));
+    const g = goal({ targetCents: 500000, steps: 10, installmentCents: 0, deadline: null });
+    expect(suggestedStepAmountOf(g, 0, TODAY)).toBe(stepAmountOf(g, 0));
+  });
+
+  it("sem parcela manual mas com prazo, sugere o valor gerado a partir da data", () => {
+    const g = goal({ targetCents: 500000, savedCents: 150000, installmentCents: null, deadline: "2026-04-15" });
+    expect(suggestedStepAmountOf(g, 0, TODAY)).toBe(Math.ceil(350000 / 3));
+  });
+
+  it("parcela manual tem prioridade sobre o prazo", () => {
+    const g = goal({ targetCents: 500000, savedCents: 150000, installmentCents: 90000, deadline: "2026-04-15" });
+    expect(suggestedStepAmountOf(g, 0, TODAY)).toBe(90000);
   });
 });
 

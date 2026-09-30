@@ -6,6 +6,7 @@ import { Icon } from "@/components/orbita/icon";
 import { Button } from "@/components/ui/button";
 import { useIsDesktop } from "@/hooks/use-media-query";
 import type { Goal } from "@/lib/api/schemas";
+import { todayISO } from "@/lib/dates";
 import { formatBRL } from "@/lib/format";
 import { CHEST_AFTER, CHEST_COINS, chestOpenedOf, nodeStateOf, suggestedStepAmountOf, type NodeState } from "./goal-trail-math";
 
@@ -95,9 +96,9 @@ export function GoalTrail({ goal, onSave, saving }: { goal: Goal; onSave: (amoun
           );
         }
         const state: NodeState = nodeStateOf(goal, it.i);
-        // Parcela configurada (manual ou gerada) sugere o valor do passo atual;
-        // os marcos da trilha (labels, baús) continuam divididos em 10 partes iguais.
-        const suggested = suggestedStepAmountOf(goal, it.i);
+        // Parcela configurada (manual ou gerada a partir do prazo) sugere o valor do
+        // passo atual; os marcos da trilha (labels, baús) continuam em partes iguais.
+        const suggested = suggestedStepAmountOf(goal, it.i, todayISO());
         return (
           <div key={`n${it.i}`} className="relative flex flex-col items-center" style={{ transform: `translateX(${x}px)` }}>
             {state === "current" ? (
