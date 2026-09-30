@@ -67,8 +67,16 @@ export function usePushSubscription() {
       }
       await subscribePush({ endpoint: json.endpoint, keys: { p256dh: json.keys.p256dh, auth: json.keys.auth } });
       return true;
-    } catch {
-      toast.error("Não foi possível ativar as notificações agora.");
+    } catch (error) {
+      // Expomos o erro real (nome técnico) em vez de uma mensagem genérica:
+      // iOS Safari tem várias causas distintas para a Push API falhar
+      // (AbortError, NotAllowedError, InvalidStateError...) e sem isso não dá
+      // pra diferenciar "sem permissão" de "serviço da Apple recusou agora".
+      const detail = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+      console.error("[push] subscribe falhou:", error);
+      toast.error(`Não foi possível ativar as notificações (${detail}). Tenta fechar e abrir o app de novo.`, {
+        duration: 10000,
+      });
       return false;
     } finally {
       setIsPending(false);
