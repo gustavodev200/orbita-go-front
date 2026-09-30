@@ -61,7 +61,11 @@ export type GoalInput = {
   icon: string;
   deadline?: string | null;
   installmentCents?: number | null;
+  /** Quanto já tinha guardado antes de criar a meta no app (backfill). */
+  savedCents?: number;
 };
+export type UpdateGoalInput = Partial<Omit<GoalInput, "savedCents">>;
 export const createGoal = (input: GoalInput) => send("post", "/goals", goalSchema, input);
+export const updateGoal = (id: string, input: UpdateGoalInput) => send("patch", `/goals/${id}`, goalSchema, input);
 export const depositGoal = (id: string, amountCents: number) =>
   sendRewarded("post", `/goals/${id}/deposit`, goalSchema, { amountCents });

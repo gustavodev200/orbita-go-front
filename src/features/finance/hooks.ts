@@ -21,10 +21,12 @@ import {
   parseTransaction,
   payRecurring,
   putBudgets,
+  updateGoal,
   updateTransaction,
   type GoalInput,
   type TransactionFilters,
   type TransactionInput,
+  type UpdateGoalInput,
 } from "./api";
 
 export function useTransactions(filters: TransactionFilters) {
@@ -98,6 +100,14 @@ export function usePutBudgets(onDone?: () => void) {
 export function useCreateGoal(onDone?: (g: Goal) => void) {
   return useApiMutation({
     mutationFn: (input: GoalInput) => createGoal(input),
+    invalidate: [financeKeys.goals],
+    onSuccess: (g) => onDone?.(g),
+  });
+}
+
+export function useUpdateGoal(onDone?: (g: Goal) => void) {
+  return useApiMutation({
+    mutationFn: ({ id, input }: { id: string; input: UpdateGoalInput }) => updateGoal(id, input),
     invalidate: [financeKeys.goals],
     onSuccess: (g) => onDone?.(g),
   });

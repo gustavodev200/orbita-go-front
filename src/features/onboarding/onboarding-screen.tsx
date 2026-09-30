@@ -52,6 +52,7 @@ export function OnboardingScreen() {
   const [off, setOff] = useState<string[]>(DEFAULT_DISABLED_KEYS);
   const [goal, setGoal] = useState("");
   const [goalValue, setGoalValue] = useState("");
+  const [goalSaved, setGoalSaved] = useState("");
   const [icon, setIcon] = useState("landscape");
   const [reward, setReward] = useState<Reward | null>(null);
 
@@ -66,12 +67,15 @@ export function OnboardingScreen() {
   const submit = useApiMutation({
     mutationFn: (skipGoal: boolean) => {
       const targetCents = parseBRLToCents(goalValue);
+      const savedCents = parseBRLToCents(goalSaved);
       const incomeCents = parseBRLToCents(income);
       return completeOnboarding({
         name: shownName.trim() || "Você",
         ...(incomeCents > 0 ? { monthlyIncomeCents: incomeCents } : {}),
         categoryKeys: expenseCats.filter((c) => !off.includes(c.key)).map((c) => c.key),
-        ...(!skipGoal && goal.trim() && targetCents > 0 ? { goal: { name: goal.trim(), targetCents, icon } } : {}),
+        ...(!skipGoal && goal.trim() && targetCents > 0
+          ? { goal: { name: goal.trim(), targetCents, icon, ...(savedCents > 0 ? { savedCents } : {}) } }
+          : {}),
       });
     },
     onSuccess: (res) => {
@@ -233,6 +237,21 @@ export function OnboardingScreen() {
                   />
                   <FieldLabel className="mt-1 mb-0">Ícone</FieldLabel>
                   <GoalIconPicker value={icon} onChange={setIcon} />
+                  <FieldLabel className="mt-1 mb-0">Já tenho guardado (opcional)</FieldLabel>
+                  <Input
+                    size="hero"
+                    tone="raised"
+                    inputMode="numeric"
+                    icon={<span className="num text-xl font-extrabold text-mut">R$</span>}
+                    value={goalSaved}
+                    onChange={(e) => setGoalSaved(maskBRLInput(e.target.value))}
+                    placeholder="0,00"
+                    aria-label="Valor já guardado"
+                    className="num text-2xl font-extrabold"
+                  />
+                  {parseBRLToCents(goalSaved) > parseBRLToCents(goalValue) ? (
+                    <div className="text-[13px] leading-[1.3] font-semibold text-r">Não pode passar do valor da meta.</div>
+                  ) : null}
                 </div>
               ) : null}
 
@@ -288,7 +307,16 @@ export function OnboardingScreen() {
               Pular
             </Button>
           ) : null}
-          <Button size="lg" className="flex-1 tracking-[.06em]" onClick={next} disabled={submit.isPending || (step === 0 && !shownName.trim())}>
+          <Button
+            size="lg"
+            className="flex-1 tracking-[.06em]"
+            onClick={next}
+            disabled={
+              submit.isPending ||
+              (step === 0 && !shownName.trim()) ||
+              (step === 3 && parseBRLToCents(goalSaved) > parseBRLToCents(goalValue))
+            }
+          >
             {done ? "Começar" : step === 3 ? (goal.trim() ? "Criar meta" : "Concluir") : "Continuar"}
           </Button>
         </div>

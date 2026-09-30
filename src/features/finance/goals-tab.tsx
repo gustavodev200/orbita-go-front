@@ -17,7 +17,7 @@ import type { Goal } from "@/lib/api/schemas";
 import { monthYearShort } from "@/lib/dates";
 import { formatBRL, maskBRLInput, parseBRLToCents } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { useCreateGoal, useDepositGoal, useGoals } from "@/features/finance/hooks";
+import { useCreateGoal, useDepositGoal, useGoals, useUpdateGoal } from "@/features/finance/hooks";
 import { GoalTrail } from "./goal-trail";
 
 export const GOAL_ICONS = ["landscape", "shield", "laptop_mac", "directions_car", "home", "school"];
@@ -69,88 +69,190 @@ const INSTALLMENT_MODES: SegmentOption<InstallmentMode>[] = [
   { value: "manual", label: "Manual" },
 ];
 
+/** Campos comuns a "Nova meta" e "Editar meta" (nome, valor, ícone, prazo, parcela). */
+type GoalFormState = { name: string; value: string; icon: string; deadline: string; installmentMode: InstallmentMode; installmentValue: string };
+
+const EMPTY_GOAL_FORM: GoalFormState = { name: "", value: "", icon: "landscape", deadline: "", installmentMode: "gerar", installmentValue: "" };
+
+/** cents → texto editável ("1234,56"), mesmo formato que maskBRLInput produz. */
+function centsToInputValue(cents: number): string {
+  return formatBRL(cents, { sign: "never" }).replace("R$ ", "");
+}
+
+function goalToFormState(g: Goal): GoalFormState {
+  return {
+    name: g.name,
+    value: centsToInputValue(g.targetCents),
+    icon: g.icon,
+    deadline: g.deadline ?? "",
+    installmentMode: g.installmentCents ? "manual" : "gerar",
+    installmentValue: g.installmentCents ? centsToInputValue(g.installmentCents) : "",
+  };
+}
+
+function useGoalFormState(initial: GoalFormState = EMPTY_GOAL_FORM) {
+  const [state, setState] = useState(initial);
+  const patch = (p: Partial<GoalFormState>) => setState((s) => ({ ...s, ...p }));
+  return [state, patch] as const;
+}
+
+function GoalFields({ state, onChange }: { state: GoalFormState; onChange: (p: Partial<GoalFormState>) => void }) {
+  const cents = parseBRLToCents(state.value);
+  return (
+    <>
+      <Input
+        size="hero"
+        tone="raised"
+        value={state.name}
+        onChange={(e) => onChange({ name: e.target.value })}
+        placeholder="Nome da meta"
+        className="font-display text-lg font-extrabold"
+      />
+      <Input
+        size="hero"
+        tone="raised"
+        inputMode="numeric"
+        icon={<span className="num text-xl font-extrabold text-mut">R$</span>}
+        value={state.value}
+        onChange={(e) => onChange({ value: maskBRLInput(e.target.value) })}
+        placeholder="0,00"
+        className="num text-2xl font-extrabold text-g"
+      />
+      <div>
+        <FieldLabel>Ícone</FieldLabel>
+        <GoalIconPicker value={state.icon} onChange={(icon) => onChange({ icon })} />
+      </div>
+      <div>
+        <FieldLabel>Prazo (opcional)</FieldLabel>
+        <Input
+          type="month"
+          tone="raised"
+          value={state.deadline}
+          onChange={(e) => onChange({ deadline: e.target.value })}
+          aria-label="Prazo da meta"
+          className="font-display text-[15px] font-extrabold"
+        />
+      </div>
+      <div>
+        <FieldLabel>Quanto guardar por vez</FieldLabel>
+        <SegmentedControl
+          value={state.installmentMode}
+          onChange={(installmentMode) => onChange({ installmentMode })}
+          options={INSTALLMENT_MODES}
+          ariaLabel="Quanto guardar por vez"
+        />
+        {state.installmentMode === "manual" ? (
+          <Input
+            size="hero"
+            tone="raised"
+            inputMode="numeric"
+            icon={<span className="num text-lg font-extrabold text-mut">R$</span>}
+            value={state.installmentValue}
+            onChange={(e) => onChange({ installmentValue: maskBRLInput(e.target.value) })}
+            placeholder="0,00"
+            aria-label="Valor da parcela"
+            className="num mt-2 text-xl font-extrabold"
+          />
+        ) : (
+          <div className="mt-2 text-[13px] leading-[1.4] font-semibold text-mut">
+            A trilha calcula o valor sugerido pra você (meta dividida em {cents > 0 ? "10 passos" : "passos iguais"}).
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 function NewGoalDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpenChange: (o: boolean) => void; onCreated: (g: Goal) => void }) {
-  const [name, setName] = useState("");
-  const [value, setValue] = useState("");
-  const [icon, setIcon] = useState("landscape");
-  const [deadline, setDeadline] = useState("");
-  const [installmentMode, setInstallmentMode] = useState<InstallmentMode>("gerar");
-  const [installmentValue, setInstallmentValue] = useState("");
+  const [form, patch] = useGoalFormState();
+  const [savedValue, setSavedValue] = useState("");
   const create = useCreateGoal((g) => {
     onCreated(g);
     onOpenChange(false);
   });
-  const cents = parseBRLToCents(value);
-  const installmentCents = parseBRLToCents(installmentValue);
-  const installmentInvalid = installmentMode === "manual" && (installmentCents <= 0 || installmentCents > cents);
+  const cents = parseBRLToCents(form.value);
+  const installmentCents = parseBRLToCents(form.installmentValue);
+  const installmentInvalid = form.installmentMode === "manual" && (installmentCents <= 0 || installmentCents > cents);
+  const savedCents = parseBRLToCents(savedValue);
+  const savedInvalid = savedCents > cents;
   return (
     <Dialog open={open} onOpenChange={onOpenChange} title="Nova meta">
       <PanelHeader title="Nova meta" onClose={() => onOpenChange(false)} />
       <PanelBody>
-        <Input size="hero" tone="raised" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome da meta" className="font-display text-lg font-extrabold" />
-        <Input
-          size="hero"
-          tone="raised"
-          inputMode="numeric"
-          icon={<span className="num text-xl font-extrabold text-mut">R$</span>}
-          value={value}
-          onChange={(e) => setValue(maskBRLInput(e.target.value))}
-          placeholder="0,00"
-          className="num text-2xl font-extrabold text-g"
-        />
+        <GoalFields state={form} onChange={patch} />
         <div>
-          <FieldLabel>Ícone</FieldLabel>
-          <GoalIconPicker value={icon} onChange={setIcon} />
-        </div>
-        <div>
-          <FieldLabel>Prazo (opcional)</FieldLabel>
+          <FieldLabel>Já tenho guardado (opcional)</FieldLabel>
           <Input
-            type="month"
+            size="hero"
             tone="raised"
-            value={deadline}
-            onChange={(e) => setDeadline(e.target.value)}
-            aria-label="Prazo da meta"
-            className="font-display text-[15px] font-extrabold"
+            inputMode="numeric"
+            icon={<span className="num text-xl font-extrabold text-mut">R$</span>}
+            value={savedValue}
+            onChange={(e) => setSavedValue(maskBRLInput(e.target.value))}
+            placeholder="0,00"
+            aria-label="Valor já guardado"
+            className="num text-2xl font-extrabold"
           />
-        </div>
-        <div>
-          <FieldLabel>Quanto guardar por vez</FieldLabel>
-          <SegmentedControl value={installmentMode} onChange={setInstallmentMode} options={INSTALLMENT_MODES} ariaLabel="Quanto guardar por vez" />
-          {installmentMode === "manual" ? (
-            <Input
-              size="hero"
-              tone="raised"
-              inputMode="numeric"
-              icon={<span className="num text-lg font-extrabold text-mut">R$</span>}
-              value={installmentValue}
-              onChange={(e) => setInstallmentValue(maskBRLInput(e.target.value))}
-              placeholder="0,00"
-              aria-label="Valor da parcela"
-              className="num mt-2 text-xl font-extrabold"
-            />
-          ) : (
-            <div className="mt-2 text-[13px] leading-[1.4] font-semibold text-mut">
-              A trilha calcula o valor sugerido pra você (meta dividida em 10 passos).
-            </div>
-          )}
+          {savedInvalid ? <div className="mt-1.5 text-[13px] leading-[1.3] font-semibold text-r">Não pode passar do valor da meta.</div> : null}
         </div>
       </PanelBody>
       <PanelFooter>
         <Button
           size="lg"
           block
-          disabled={!name.trim() || cents <= 0 || installmentInvalid || create.isPending}
+          disabled={!form.name.trim() || cents <= 0 || installmentInvalid || savedInvalid || create.isPending}
           onClick={() =>
             create.mutate({
-              name: name.trim(),
+              name: form.name.trim(),
               targetCents: cents,
-              icon,
-              deadline: deadline || null,
-              installmentCents: installmentMode === "manual" ? installmentCents : null,
+              icon: form.icon,
+              deadline: form.deadline || null,
+              installmentCents: form.installmentMode === "manual" ? installmentCents : null,
+              ...(savedCents > 0 ? { savedCents } : {}),
             })
           }
         >
           Criar meta
+        </Button>
+      </PanelFooter>
+    </Dialog>
+  );
+}
+
+function EditGoalDialog({ goal, open, onOpenChange, onSaved }: { goal: Goal; open: boolean; onOpenChange: (o: boolean) => void; onSaved: (g: Goal) => void }) {
+  const [form, patch] = useGoalFormState(goalToFormState(goal));
+  const update = useUpdateGoal((g) => {
+    onSaved(g);
+    onOpenChange(false);
+  });
+  const cents = parseBRLToCents(form.value);
+  const installmentCents = parseBRLToCents(form.installmentValue);
+  const installmentInvalid = form.installmentMode === "manual" && (installmentCents <= 0 || installmentCents > cents);
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange} title="Editar meta">
+      <PanelHeader title="Editar meta" onClose={() => onOpenChange(false)} />
+      <PanelBody>
+        <GoalFields state={form} onChange={patch} />
+      </PanelBody>
+      <PanelFooter>
+        <Button
+          size="lg"
+          block
+          disabled={!form.name.trim() || cents <= 0 || installmentInvalid || update.isPending}
+          onClick={() =>
+            update.mutate({
+              id: goal.id,
+              input: {
+                name: form.name.trim(),
+                targetCents: cents,
+                icon: form.icon,
+                deadline: form.deadline || null,
+                installmentCents: form.installmentMode === "manual" ? installmentCents : null,
+              },
+            })
+          }
+        >
+          Salvar
         </Button>
       </PanelFooter>
     </Dialog>
@@ -163,6 +265,7 @@ export function GoalsTab({ startCreating }: { startCreating?: boolean }) {
   const deposit = useDepositGoal();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [creating, setCreating] = useState(!!startCreating);
+  const [editing, setEditing] = useState(false);
   const list = goals.data ?? [];
   const g = list.find((x) => x.id === selectedId) ?? list.find((x) => !x.completed) ?? list[0];
 
@@ -216,10 +319,18 @@ export function GoalsTab({ startCreating }: { startCreating?: boolean }) {
             <Card radius="lg" className="flex flex-col gap-3 lg:sticky lg:top-[96px]">
               <div className="flex items-center gap-3">
                 <IconTile icon={g.icon} color={goalColor(g.icon)} size={52} radius={16} iconSize={30} />
-                <div>
+                <div className="flex-1">
                   <div className="font-display text-xl leading-[1.15] font-black">{g.name}</div>
                   <div className="text-[13px] leading-[1.3] font-semibold text-mut">{goalSubtitle(g)}</div>
                 </div>
+                <button
+                  type="button"
+                  aria-label="Editar meta"
+                  onClick={() => setEditing(true)}
+                  className="flex size-9 shrink-0 items-center justify-center rounded-full bg-sf2 text-mut"
+                >
+                  <Icon name="edit" size={18} />
+                </button>
               </div>
               <div className="flex items-baseline gap-2">
                 <div className="num text-[32px] leading-none font-extrabold tracking-[-.02em]">{formatBRL(g.savedCents)}</div>
@@ -236,6 +347,7 @@ export function GoalsTab({ startCreating }: { startCreating?: boolean }) {
         ) : null}
       </QueryState>
       {creating ? <NewGoalDialog open={creating} onOpenChange={setCreating} onCreated={(x) => setSelectedId(x.id)} /> : null}
+      {editing && g ? <EditGoalDialog goal={g} open={editing} onOpenChange={setEditing} onSaved={() => {}} /> : null}
     </>
   );
 }
