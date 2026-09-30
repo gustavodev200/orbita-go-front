@@ -1,4 +1,4 @@
-# órbitaGO — front
+# órbitaGO — frontend
 
 Web app pessoal gamificado de **finanças + tarefas** (mobile-first 390→1440px, pt-BR, BRL).
 Next.js 16 (App Router) · Tailwind v4 · shadcn/ui (Radix) · framer-motion · TanStack Query · Zustand · Zod · Supabase Auth (Google) via `@supabase/ssr`.
@@ -48,14 +48,21 @@ regras de segurança já prontos.
 
 ## Índice
 
-- [O que tem aqui](#o-que-tem-aqui)
-- [Como criar um novo projeto a partir do template](#como-criar-um-novo-projeto-a-partir-do-template)
-- [Escolhendo o preset (Prisma/PostgreSQL vs Supabase)](#escolhendo-o-preset)
-- [Como as skills condicionais funcionam](#como-as-skills-condicionais-funcionam)
-- [Como o Claude Code identifica a stack](#como-o-claude-code-identifica-a-stack)
-- [Usando o SpecKit](#usando-o-speckit)
-- [Adicionando uma nova stack](#adicionando-uma-nova-stack)
-- [Arquivos a personalizar por projeto](#arquivos-a-personalizar-por-projeto)
+- [órbitaGO — frontend](#órbitago--frontend)
+  - [Setup](#setup)
+  - [Scripts](#scripts)
+  - [Estrutura](#estrutura)
+- [workspace-agents](#workspace-agents)
+  - [Índice](#índice)
+  - [O que tem aqui](#o-que-tem-aqui)
+  - [Como criar um novo projeto a partir do template](#como-criar-um-novo-projeto-a-partir-do-template)
+  - [Escolhendo o preset](#escolhendo-o-preset)
+  - [Como as skills condicionais funcionam](#como-as-skills-condicionais-funcionam)
+  - [Como o Claude Code identifica a stack](#como-o-claude-code-identifica-a-stack)
+  - [Usando o SpecKit](#usando-o-speckit)
+    - [Auditoria completa (fora do fluxo por feature)](#auditoria-completa-fora-do-fluxo-por-feature)
+  - [Adicionando uma nova stack](#adicionando-uma-nova-stack)
+  - [Arquivos a personalizar por projeto](#arquivos-a-personalizar-por-projeto)
 
 ## O que tem aqui
 
