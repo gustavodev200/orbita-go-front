@@ -13,7 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import type { Goal } from "@/lib/api/schemas";
+import type { Goal, GoalFrequency } from "@/lib/api/schemas";
 import { deadlineToISODay, formatDeadline, todayISO } from "@/lib/dates";
 import { formatBRL, maskBRLInput, parseBRLToCents } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -70,10 +70,32 @@ const INSTALLMENT_MODES: SegmentOption<InstallmentMode>[] = [
   { value: "manual", label: "Manual" },
 ];
 
-/** Campos comuns a "Nova meta" e "Editar meta" (nome, valor, ícone, prazo, parcela). */
-type GoalFormState = { name: string; value: string; icon: string; deadline: string; installmentMode: InstallmentMode; installmentValue: string };
+const FREQUENCY_OPTIONS: SegmentOption<GoalFrequency>[] = [
+  { value: "weekly", label: "Semanal" },
+  { value: "biweekly", label: "Quinzenal" },
+  { value: "monthly", label: "Mensal" },
+];
 
-const EMPTY_GOAL_FORM: GoalFormState = { name: "", value: "", icon: "landscape", deadline: "", installmentMode: "gerar", installmentValue: "" };
+/** Campos comuns a "Nova meta" e "Editar meta" (nome, valor, ícone, prazo, parcela, cadência). */
+type GoalFormState = {
+  name: string;
+  value: string;
+  icon: string;
+  deadline: string;
+  installmentMode: InstallmentMode;
+  installmentValue: string;
+  frequency: GoalFrequency;
+};
+
+const EMPTY_GOAL_FORM: GoalFormState = {
+  name: "",
+  value: "",
+  icon: "landscape",
+  deadline: "",
+  installmentMode: "gerar",
+  installmentValue: "",
+  frequency: "monthly",
+};
 
 /** cents → texto editável ("1234,56"), mesmo formato que maskBRLInput produz. */
 function centsToInputValue(cents: number): string {
@@ -88,6 +110,7 @@ function goalToFormState(g: Goal): GoalFormState {
     deadline: g.deadline ? deadlineToISODay(g.deadline) : "",
     installmentMode: g.installmentCents ? "manual" : "gerar",
     installmentValue: g.installmentCents ? centsToInputValue(g.installmentCents) : "",
+    frequency: g.frequency ?? "monthly",
   };
 }
 
@@ -144,6 +167,20 @@ function GoalFields({
           className="font-display text-[15px] font-extrabold"
         />
       </div>
+      {state.deadline ? (
+        <div>
+          <FieldLabel>Com que frequência você vai guardar?</FieldLabel>
+          <SegmentedControl
+            value={state.frequency}
+            onChange={(frequency) => onChange({ frequency })}
+            options={FREQUENCY_OPTIONS}
+            ariaLabel="Frequência dos aportes"
+          />
+          <div className="mt-2 text-[13px] leading-[1.4] font-semibold text-mut">
+            A trilha vai mostrar 1 marco pra cada aporte, com a data, até {formatDeadline(state.deadline)}.
+          </div>
+        </div>
+      ) : null}
       <div>
         <FieldLabel>Quanto guardar por vez</FieldLabel>
         <SegmentedControl
@@ -220,6 +257,7 @@ function NewGoalDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpe
               targetCents: cents,
               icon: form.icon,
               deadline: form.deadline || null,
+              frequency: form.deadline ? form.frequency : null,
               installmentCents: form.installmentMode === "manual" ? installmentCents : null,
               ...(savedCents > 0 ? { savedCents } : {}),
             })
@@ -260,6 +298,7 @@ function EditGoalDialog({ goal, open, onOpenChange, onSaved }: { goal: Goal; ope
                 targetCents: cents,
                 icon: form.icon,
                 deadline: form.deadline || null,
+                frequency: form.deadline ? form.frequency : null,
                 installmentCents: form.installmentMode === "manual" ? installmentCents : null,
               },
             })

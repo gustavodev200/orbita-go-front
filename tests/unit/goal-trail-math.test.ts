@@ -1,22 +1,27 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  CHEST_AFTER,
   chestOpenedOf,
+  chestStepsFor,
   currentStepOf,
+  hasDateSchedule,
   installmentByDeadline,
+  nodeDateOf,
   nodeStateOf,
+  scheduleDatesOf,
   stepAmountOf,
   suggestedStepAmountOf,
 } from "@/features/finance/goal-trail-math";
 import type { Goal } from "@/lib/api/schemas";
 
 const TODAY = "2026-01-15";
+const CHEST_AFTER = chestStepsFor(10).map((step) => step - 1); // [2, 6] — compat da trilha padrão de 10 passos
 
 function goal(over: Partial<Goal> = {}): Goal {
   return {
     id: "g1", name: "Viagem", icon: "landscape", targetCents: 500000, savedCents: 150000,
-    installmentCents: null, steps: 10, currentStep: 3, chestsOpened: [], completed: false, deadline: null, ...over,
+    installmentCents: null, steps: 10, currentStep: 3, chestsOpened: [], completed: false, deadline: null,
+    frequency: null, trailStartDate: null, ...over,
   };
 }
 
@@ -113,5 +118,59 @@ describe("chestOpenedOf", () => {
   it("respeita `chestsOpened` (1-based) vindo do back mesmo se currentStep ainda não passou", () => {
     const g = goal({ currentStep: 0, chestsOpened: [3] }); // baú após o nó de índice 2 = passo 3 (1-based)
     expect(chestOpenedOf(g, 2)).toBe(true);
+  });
+});
+
+describe("chestStepsFor", () => {
+  it("trilha padrão de 10 passos: baús após os passos 3 e 7 (compatibilidade)", () => {
+    expect(chestStepsFor(10)).toEqual([3, 7]);
+  });
+
+  it("trilha curta: dedupe quando os dois baús cairiam no mesmo passo", () => {
+    expect(chestStepsFor(2)).toEqual([1]);
+  });
+
+  it("trilha de 1 passo: sem baú", () => {
+    expect(chestStepsFor(1)).toEqual([]);
+  });
+});
+
+describe("scheduleDatesOf", () => {
+  it("semanal: um aporte a cada 7 dias até o prazo", () => {
+    expect(scheduleDatesOf("2026-09-30", "2026-10-21", "weekly")).toEqual(["2026-10-07", "2026-10-14", "2026-10-21"]);
+  });
+
+  it("quinzenal: um aporte a cada 15 dias, último absorve o resto", () => {
+    expect(scheduleDatesOf("2026-09-30", "2026-11-20", "biweekly")).toEqual(["2026-10-15", "2026-10-30", "2026-11-14", "2026-11-20"]);
+  });
+
+  it("mensal: mesmo dia do mês, avançando", () => {
+    expect(scheduleDatesOf("2026-09-30", "2026-12-30", "monthly")).toEqual(["2026-10-30", "2026-11-30", "2026-12-30"]);
+  });
+
+  it("prazo já vencido: sempre pelo menos 1 data (o prazo)", () => {
+    expect(scheduleDatesOf("2026-09-30", "2026-09-30", "monthly")).toEqual(["2026-09-30"]);
+  });
+});
+
+describe("hasDateSchedule", () => {
+  it("true só quando deadline + frequency + trailStartDate estão presentes", () => {
+    expect(hasDateSchedule(goal({ deadline: "2026-12-30", frequency: "monthly", trailStartDate: "2026-09-30" }))).toBe(true);
+  });
+
+  it("false sem frequency (trilha por dinheiro)", () => {
+    expect(hasDateSchedule(goal({ deadline: "2026-12-30", frequency: null, trailStartDate: null }))).toBe(false);
+  });
+});
+
+describe("nodeDateOf", () => {
+  it("sem schedule ativo, retorna null", () => {
+    expect(nodeDateOf(goal(), 0)).toBeNull();
+  });
+
+  it("com schedule ativo, retorna a data daquele nó", () => {
+    const g = goal({ deadline: "2026-12-30", frequency: "monthly", trailStartDate: "2026-09-30", steps: 3 });
+    expect(nodeDateOf(g, 0)).toBe("2026-10-30");
+    expect(nodeDateOf(g, 2)).toBe("2026-12-30");
   });
 });

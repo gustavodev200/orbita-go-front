@@ -9,6 +9,7 @@ import {
   summarySchema,
   transactionSchema,
   type Frequency,
+  type GoalFrequency,
   type TxType,
 } from "@/lib/api/schemas";
 
@@ -61,6 +62,8 @@ export type GoalInput = {
   icon: string;
   deadline?: string | null;
   installmentCents?: number | null;
+  /** Cadência dos aportes na trilha por data; só tem efeito junto com `deadline`. */
+  frequency?: GoalFrequency | null;
   /** Quanto já tinha guardado antes de criar a meta no app (backfill). */
   savedCents?: number;
 };

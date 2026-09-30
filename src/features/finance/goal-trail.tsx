@@ -6,9 +6,17 @@ import { Icon } from "@/components/orbita/icon";
 import { Button } from "@/components/ui/button";
 import { useIsDesktop } from "@/hooks/use-media-query";
 import type { Goal } from "@/lib/api/schemas";
-import { todayISO } from "@/lib/dates";
+import { formatDM, todayISO } from "@/lib/dates";
 import { formatBRL } from "@/lib/format";
-import { CHEST_AFTER, CHEST_COINS, chestOpenedOf, nodeStateOf, suggestedStepAmountOf, type NodeState } from "./goal-trail-math";
+import {
+  CHEST_COINS,
+  chestOpenedOf,
+  chestStepsFor,
+  nodeDateOf,
+  nodeStateOf,
+  suggestedStepAmountOf,
+  type NodeState,
+} from "./goal-trail-math";
 
 /** Offsets X da trilha em zig-zag (×0.7 no mobile). */
 const XS = [0, 56, 84, 56, 0, -56, -84, -56, 0, 40];
@@ -76,11 +84,12 @@ export function GoalTrail({ goal, onSave, saving }: { goal: Goal; onSave: (amoun
   const steps = goal.steps || 10;
   const per = Math.round(goal.targetCents / steps);
   const k = desktop ? 1 : 0.7;
+  const chestAfter = chestStepsFor(steps).map((step) => step - 1);
 
   const items: ({ kind: "node"; i: number } | { kind: "chest"; i: number })[] = [];
   for (let i = 0; i < steps; i++) {
     items.push({ kind: "node", i });
-    if (CHEST_AFTER.includes(i)) items.push({ kind: "chest", i });
+    if (chestAfter.includes(i)) items.push({ kind: "chest", i });
   }
 
   return (
@@ -99,6 +108,9 @@ export function GoalTrail({ goal, onSave, saving }: { goal: Goal; onSave: (amoun
         // Parcela configurada (manual ou gerada a partir do prazo) sugere o valor do
         // passo atual; os marcos da trilha (labels, baús) continuam em partes iguais.
         const suggested = suggestedStepAmountOf(goal, it.i, todayISO());
+        // Com prazo + frequência, cada nó mostra a data do aporte em vez do valor acumulado.
+        const date = nodeDateOf(goal, it.i);
+        const label = date ? formatDM(date) : formatBRL(per * (it.i + 1), { compact: true });
         return (
           <div key={`n${it.i}`} className="relative flex flex-col items-center" style={{ transform: `translateX(${x}px)` }}>
             {state === "current" ? (
@@ -113,7 +125,7 @@ export function GoalTrail({ goal, onSave, saving }: { goal: Goal; onSave: (amoun
                 <div className="-mt-2 size-3.5 rotate-45 bg-g" />
               </motion.div>
             ) : null}
-            <TrailNode state={state} last={it.i === steps - 1} label={formatBRL(per * (it.i + 1), { compact: true })} />
+            <TrailNode state={state} last={it.i === steps - 1} label={label} />
           </div>
         );
       })}

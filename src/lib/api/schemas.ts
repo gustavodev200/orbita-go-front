@@ -125,6 +125,9 @@ export const budgetSchema = z.object({
 });
 export type Budget = z.infer<typeof budgetSchema>;
 
+export const goalFrequencySchema = z.enum(["weekly", "biweekly", "monthly"]);
+export type GoalFrequency = z.infer<typeof goalFrequencySchema>;
+
 export const goalSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -139,6 +142,10 @@ export const goalSchema = z.object({
   completed: z.boolean(),
   /** "YYYY-MM", opcional. */
   deadline: z.string().nullable().default(null),
+  /** Cadência dos aportes na trilha por data; só tem efeito junto com `deadline`. */
+  frequency: goalFrequencySchema.nullable().default(null),
+  /** Âncora (somente leitura) de onde a trilha por data começa a contar. */
+  trailStartDate: z.string().nullable().default(null),
 });
 export type Goal = z.infer<typeof goalSchema>;
 

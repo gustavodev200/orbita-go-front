@@ -24,6 +24,15 @@ export function addDaysISO(iso: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+/** Soma meses a "YYYY-MM-DD" preservando o dia; clampa pro último dia se o mês de destino for mais curto. */
+export function addMonthsISO(iso: string, amount: number): string {
+  const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
+  const firstOfTarget = new Date(Date.UTC(y, m - 1 + amount, 1));
+  const lastDayOfTarget = new Date(Date.UTC(firstOfTarget.getUTCFullYear(), firstOfTarget.getUTCMonth() + 1, 0)).getUTCDate();
+  const clampedDay = Math.min(d, lastDayOfTarget);
+  return new Date(Date.UTC(firstOfTarget.getUTCFullYear(), firstOfTarget.getUTCMonth(), clampedDay)).toISOString().slice(0, 10);
+}
+
 /** "2026-09-29" → "29/09". */
 export function formatDM(iso: string): string {
   const [, m, d] = iso.slice(0, 10).split("-");

@@ -1,8 +1,6 @@
-import { deadlineToISODay, monthsUntil } from "@/lib/dates";
-import type { Goal } from "@/lib/api/schemas";
+import { addDaysISO, addMonthsISO, deadlineToISODay, monthsUntil } from "@/lib/dates";
+import type { Goal, GoalFrequency } from "@/lib/api/schemas";
 
-/** Baús depois dos nós 3 e 7 (índices 0-based 2 e 6 — design README). */
-export const CHEST_AFTER = [2, 6];
 export const CHEST_COINS = 50;
 
 export type NodeState = "done" | "current" | "locked";
@@ -70,4 +68,49 @@ export function suggestedStepAmountOf(
 ): number {
   if (goal.installmentCents && goal.installmentCents > 0) return goal.installmentCents;
   return installmentByDeadline(goal.targetCents, goal.savedCents, goal.deadline, today) ?? stepAmountOf(goal, i);
+}
+
+/**
+ * Passos (1-based) após os quais abre um baú, proporcional ao tamanho da
+ * trilha (~30% e ~70% do caminho). Pra `steps` = 10 (trilha padrão, sem
+ * prazo/frequência) dá exatamente [3, 7] — mesmo resultado de sempre.
+ * Espelha `chestStepsFor` do back (gamification/rules.ts).
+ */
+export function chestStepsFor(steps: number): number[] {
+  const candidates = [Math.round(steps * 0.3), Math.round(steps * 0.7)];
+  return [...new Set(candidates)].filter((step) => step > 0 && step < steps).sort((a, b) => a - b);
+}
+
+/**
+ * Datas (YYYY-MM-DD) de cada aporte esperado entre `trailStartDate` e
+ * `deadline`, na cadência escolhida. Sempre termina exatamente no prazo e
+ * sempre tem pelo menos 1 data. Espelha `scheduleDatesOf` do back.
+ */
+export function scheduleDatesOf(trailStartDate: string, deadline: string, frequency: GoalFrequency): string[] {
+  function next(day: string): string {
+    if (frequency === "weekly") return addDaysISO(day, 7);
+    if (frequency === "biweekly") return addDaysISO(day, 15);
+    return addMonthsISO(day, 1);
+  }
+
+  const dates: string[] = [];
+  let cur = next(trailStartDate);
+  while (cur < deadline) {
+    dates.push(cur);
+    cur = next(cur);
+  }
+  dates.push(deadline);
+  return dates;
+}
+
+/** Meta tem trilha por data (em vez da trilha por dinheiro de 10 passos fixos)? */
+export function hasDateSchedule(goal: Pick<Goal, "deadline" | "frequency" | "trailStartDate">): boolean {
+  return Boolean(goal.deadline && goal.frequency && goal.trailStartDate);
+}
+
+/** Data do aporte esperado no nó `i` (0-based), ou `null` se a meta não tem trilha por data. */
+export function nodeDateOf(goal: Pick<Goal, "deadline" | "frequency" | "trailStartDate">, i: number): string | null {
+  if (!hasDateSchedule(goal)) return null;
+  const dates = scheduleDatesOf(goal.trailStartDate!, deadlineToISODay(goal.deadline!), goal.frequency!);
+  return dates[i] ?? null;
 }
