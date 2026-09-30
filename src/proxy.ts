@@ -55,5 +55,8 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
+  // manifest.webmanifest e sw.js precisam ser sempre públicos e servidos como
+  // estão (nunca redirecionados pro /login) — o navegador os busca fora do
+  // contexto de navegação, e um 307 pra HTML quebra o manifest e o service worker.
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)"],
 };
