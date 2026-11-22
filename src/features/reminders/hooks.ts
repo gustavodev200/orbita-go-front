@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 import type { Reminder, ReminderDraft } from "@/lib/api/schemas";
 import { useApiMutation } from "@/features/rewards/use-api-mutation";
-import { createReminder, deleteReminder, getReminders, parseReminder, reminderKeys, updateReminder } from "./api";
+import { bulkDeleteReminders, createReminder, deleteReminder, getReminders, parseReminder, reminderKeys, updateReminder } from "./api";
 
 export function useReminders() {
   return useQuery({ queryKey: reminderKeys.all, queryFn: getReminders });
@@ -28,6 +28,15 @@ export function useDeleteReminder() {
     mutationFn: (id: string) => deleteReminder(id),
     invalidate: [reminderKeys.all],
     message: () => "Lembrete excluído",
+  });
+}
+
+export function useBulkDeleteReminders(onDone?: () => void) {
+  return useApiMutation({
+    mutationFn: (ids: string[]) => bulkDeleteReminders(ids),
+    invalidate: [reminderKeys.all],
+    message: ({ deleted }) => (deleted === 1 ? "1 lembrete excluído" : `${deleted} lembretes excluídos`),
+    onSuccess: () => onDone?.(),
   });
 }
 

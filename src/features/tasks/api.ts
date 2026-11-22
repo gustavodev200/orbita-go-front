@@ -13,3 +13,4 @@ export const updateTask = (id: string, input: Partial<TaskInput>) => send("patch
 export const deleteTask = (id: string) => send("delete", `/tasks/${id}`, z.unknown());
 export const completeTask = (id: string) => sendRewarded("post", `/tasks/${id}/complete`, taskSchema);
 export const uncompleteTask = (id: string) => send("post", `/tasks/${id}/uncomplete`, taskSchema);
+export const bulkDeleteTasks = (ids: string[]) => send("post", "/tasks/bulk-delete", z.object({ deleted: z.number() }), { ids });

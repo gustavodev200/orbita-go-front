@@ -107,6 +107,12 @@ export async function mockApi(page: Page, apiUrl: string): Promise<RecordedCall[
       return json(route, { data: { ...GOALS[0], savedCents: GOALS[0].savedCents + ((body as { amountCents?: number })?.amountCents ?? 0) }, reward: reward({ xp: 20, coins: 0 }) });
     }
 
+    if (pathname === "/tasks/bulk-delete" && method === "POST") {
+      const ids = (body as { ids: string[] }).ids;
+      const before = tasks.length;
+      tasks.splice(0, tasks.length, ...tasks.filter((t) => !ids.includes(t.id)));
+      return json(route, { deleted: before - tasks.length });
+    }
     if (pathname === "/tasks" && method === "GET") return json(route, tasks);
     if (pathname === "/tasks" && method === "POST") {
       const t: Task = { id: `task-${tasks.length + 1}`, done: false, doneAt: null, reminderAt: null, ...(body as object) } as Task;
@@ -134,6 +140,12 @@ export async function mockApi(page: Page, apiUrl: string): Promise<RecordedCall[
     if (pathname.match(/^\/tasks\/[^/]+$/) && method === "PATCH") return json(route, { ...tasks[0], ...(body as object) });
     if (pathname.match(/^\/tasks\/[^/]+$/) && method === "DELETE") return json(route, { ok: true });
 
+    if (pathname === "/reminders/bulk-delete" && method === "POST") {
+      const ids = (body as { ids: string[] }).ids;
+      const before = reminders.length;
+      reminders.splice(0, reminders.length, ...reminders.filter((r) => !ids.includes(r.id)));
+      return json(route, { deleted: before - reminders.length });
+    }
     if (pathname === "/reminders" && method === "GET") return json(route, reminders);
     if (pathname === "/reminders/parse" && method === "POST") {
       return json(route, { title: "Pagar o aluguel", kind: "finance", time: "09:00", repeat: "monthly", dayOfMonth: 5, weekday: null, date: null });

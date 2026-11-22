@@ -23,4 +23,21 @@ test.describe("Tarefas", () => {
       priority: "medium",
     });
   });
+
+  test("selecionar várias tarefas e excluir de uma vez", async ({ authedPage: page, apiCalls }) => {
+    await page.goto("/tarefas");
+    await page.getByRole("button", { name: "Selecionar" }).click();
+    await page.getByRole("checkbox", { name: "Selecionar Ligar pro dentista" }).click();
+    await page.getByRole("checkbox", { name: "Selecionar Revisar orçamento" }).click();
+    await page.getByRole("button", { name: "Excluir (2)" }).click();
+
+    const confirm = page.getByRole("dialog");
+    await expect(confirm).toContainText("Excluir 2 tarefas?");
+    await confirm.getByRole("button", { name: "Excluir" }).click();
+
+    await expect
+      .poll(() => apiCalls.find((c) => c.method === "POST" && c.pathname === "/tasks/bulk-delete")?.body)
+      .toEqual({ ids: ["task-1", "task-2"] });
+    await expect(page.getByText("Ligar pro dentista")).toHaveCount(0);
+  });
 });

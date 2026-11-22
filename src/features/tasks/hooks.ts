@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { Task } from "@/lib/api/schemas";
 import { reminderKeys } from "@/features/reminders/api";
 import { useApiMutation, useRewardedMutation } from "@/features/rewards/use-api-mutation";
-import { completeTask, createTask, deleteTask, getTasks, taskKeys, uncompleteTask, updateTask, type TaskInput } from "./api";
+import { bulkDeleteTasks, completeTask, createTask, deleteTask, getTasks, taskKeys, uncompleteTask, updateTask, type TaskInput } from "./api";
 
 export function useTasks() {
   return useQuery({ queryKey: taskKeys.all, queryFn: getTasks });
@@ -33,6 +33,15 @@ export function useUpdateTask(onDone?: () => void) {
 
 export function useDeleteTask() {
   return useApiMutation({ mutationFn: (id: string) => deleteTask(id), invalidate: TASK_INVALIDATE, message: () => "Tarefa excluída" });
+}
+
+export function useBulkDeleteTasks(onDone?: () => void) {
+  return useApiMutation({
+    mutationFn: (ids: string[]) => bulkDeleteTasks(ids),
+    invalidate: TASK_INVALIDATE,
+    message: ({ deleted }) => (deleted === 1 ? "1 tarefa excluída" : `${deleted} tarefas excluídas`),
+    onSuccess: () => onDone?.(),
+  });
 }
 
 /** Marca/desmarca com update otimista (o check anima na hora). */

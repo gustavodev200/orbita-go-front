@@ -64,4 +64,16 @@ test.describe("Agenda", () => {
     await expect(dialog).toContainText("Novo lembrete");
     await expect(dialog.getByLabel("Horário do lembrete")).toHaveValue("10:00");
   });
+
+  test("selecionar lembretes e excluir em lote", async ({ authedPage: page, apiCalls }) => {
+    await page.goto("/agenda");
+    await page.getByRole("button", { name: "Selecionar" }).click();
+    await page.getByRole("button", { name: "Selecionar todos" }).click();
+    await page.getByRole("button", { name: "Excluir (1)" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Excluir" }).click();
+
+    await expect
+      .poll(() => apiCalls.find((c) => c.method === "POST" && c.pathname === "/reminders/bulk-delete")?.body)
+      .toEqual({ ids: ["rem-1"] });
+  });
 });

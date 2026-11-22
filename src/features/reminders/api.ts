@@ -12,3 +12,5 @@ export const createReminder = (input: ReminderDraft & { enabled?: boolean }) =>
 export const updateReminder = (id: string, input: Partial<ReminderDraft> & { enabled?: boolean }) =>
   send("patch", `/reminders/${id}`, reminderSchema, input);
 export const deleteReminder = (id: string) => send("delete", `/reminders/${id}`, z.unknown());
+export const bulkDeleteReminders = (ids: string[]) =>
+  send("post", "/reminders/bulk-delete", z.object({ deleted: z.number() }), { ids });

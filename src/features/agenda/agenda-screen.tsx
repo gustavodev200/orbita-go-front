@@ -4,14 +4,17 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 
+import { ConfirmDialog } from "@/components/orbita/confirm-dialog";
 import { Icon } from "@/components/orbita/icon";
+import { SelectBox, SelectionBar } from "@/components/orbita/selection-bar";
 import { EmptyState, LoadingState, QueryState } from "@/components/orbita/states";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Switch } from "@/components/ui/switch";
 import { NotificationsCard } from "@/features/push/notifications-card";
-import { useDeleteReminder, useReminders, useToggleReminder } from "@/features/reminders/hooks";
+import { useBulkDeleteReminders, useDeleteReminder, useReminders, useToggleReminder } from "@/features/reminders/hooks";
+import { useSelection } from "@/hooks/use-selection";
 import { whenLabel } from "@/features/reminders/recurrence";
 import type { Reminder } from "@/lib/api/schemas";
 import { addDaysISO, dayGroupLabel, todayISO } from "@/lib/dates";
@@ -26,12 +29,13 @@ const AgendaCalendar = dynamic(() => import("./agenda-calendar"), {
   loading: () => <LoadingState rows={5} />,
 });
 
-function ReminderRow({ r }: { r: Reminder }) {
+function ReminderRow({ r, selection }: { r: Reminder; selection?: { checked: boolean; onToggle: () => void } }) {
   const toggle = useToggleReminder();
   const del = useDeleteReminder();
   const [enabled, setEnabled] = useState(r.enabled);
   return (
-    <div className={cn("flex items-center gap-3 py-3 transition-opacity", !enabled && "opacity-50")}>
+    <div className={cn("flex items-center gap-3 py-3 transition-opacity", !enabled && !selection && "opacity-50")}>
+      {selection ? <SelectBox checked={selection.checked} label={`Selecionar ${r.title}`} onChange={selection.onToggle} /> : null}
       <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gs text-g">
         <Icon name={r.kind === "finance" ? "payments" : "notifications"} size={20} />
       </div>
@@ -41,28 +45,32 @@ function ReminderRow({ r }: { r: Reminder }) {
           {whenLabel(r, todayISO())} · {r.time}
         </div>
       </div>
-      <Switch
-        checked={enabled}
-        aria-label={enabled ? "Desativar lembrete" : "Ativar lembrete"}
-        onCheckedChange={(v) => {
-          setEnabled(v);
-          toggle.mutate({ id: r.id, enabled: v }, { onError: () => setEnabled(!v) });
-        }}
-      />
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          aria-label="Opções do lembrete"
-          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-transparent text-mut outline-none hover:bg-sf2 data-[state=open]:bg-sf2"
-        >
-          <Icon name="more_horiz" size={20} />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="left" align="start">
-          <DropdownMenuItem tone="danger" disabled={del.isPending} onSelect={() => del.mutate(r.id)}>
-            <Icon name="delete" />
-            Excluir
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      {selection ? null : (
+        <>
+          <Switch
+            checked={enabled}
+            aria-label={enabled ? "Desativar lembrete" : "Ativar lembrete"}
+            onCheckedChange={(v) => {
+              setEnabled(v);
+              toggle.mutate({ id: r.id, enabled: v }, { onError: () => setEnabled(!v) });
+            }}
+          />
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              aria-label="Opções do lembrete"
+              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-transparent text-mut outline-none hover:bg-sf2 data-[state=open]:bg-sf2"
+            >
+              <Icon name="more_horiz" size={20} />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent side="left" align="start">
+              <DropdownMenuItem tone="danger" disabled={del.isPending} onSelect={() => del.mutate(r.id)}>
+                <Icon name="delete" />
+                Excluir
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
+      )}
     </div>
   );
 }
@@ -76,12 +84,23 @@ export function AgendaScreen() {
   const params = useSearchParams();
   const today = todayISO();
   const [selected, setSelected] = useState(params.get("dia") ?? today);
-  const [range, setRange] = useState({ start: addDaysISO(today, -7), end: addDaysISO(today, 42) });
+  const [range, setRange] = useState({
+    start: addDaysISO(today, -7),
+    end: addDaysISO(today, 42),
+  });
   const agenda = useAgenda(range.start, range.end);
   const reminders = useReminders();
   const openQuickAdd = useAppStore((s) => s.openQuickAdd);
   const dayItems = agenda.items.filter((i) => i.date === selected);
   const list = (reminders.data ?? []).filter((r) => !r.taskId);
+  const sel = useSelection<string>();
+  const [confirming, setConfirming] = useState(false);
+  const bulk = useBulkDeleteReminders(() => {
+    setConfirming(false);
+    sel.stop();
+  });
+  const allIds = list.map((r) => r.id);
+  const allSelected = allIds.length > 0 && allIds.every((id) => sel.selected.has(id));
 
   return (
     <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
@@ -133,7 +152,14 @@ export function AgendaScreen() {
         <Card className="flex flex-col">
           <CardHeader className="pb-1">
             <CardTitle>Meus lembretes</CardTitle>
-            <span className="text-[13px] text-mut">{activeLabel(list.filter((r) => r.enabled).length)}</span>
+            {list.length && !sel.active ? (
+              <Button variant="ghost" size="xs" onClick={sel.start}>
+                <Icon name="checklist" size={18} />
+                Selecionar
+              </Button>
+            ) : (
+              <span className="text-[13px] text-mut">{activeLabel(list.filter((r) => r.enabled).length)}</span>
+            )}
           </CardHeader>
           <QueryState
             query={reminders}
@@ -153,12 +179,41 @@ export function AgendaScreen() {
           >
             <div className="flex flex-col [&>*+*]:border-t [&>*+*]:border-sf2">
               {list.map((r) => (
-                <ReminderRow key={r.id} r={r} />
+                <ReminderRow
+                  key={r.id}
+                  r={r}
+                  selection={
+                    sel.active
+                      ? {
+                          checked: sel.selected.has(r.id),
+                          onToggle: () => sel.toggle(r.id),
+                        }
+                      : undefined
+                  }
+                />
               ))}
             </div>
           </QueryState>
         </Card>
       </div>
+      {sel.active ? (
+        <SelectionBar
+          count={sel.selected.size}
+          allSelected={allSelected}
+          onSelectAll={() => (allSelected ? sel.clear() : sel.setMany(allIds, true))}
+          onCancel={sel.stop}
+          onDelete={() => setConfirming(true)}
+        />
+      ) : null}
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title={sel.selected.size === 1 ? "Excluir 1 lembrete?" : `Excluir ${sel.selected.size} lembretes?`}
+        text="Essa ação não pode ser desfeita e as notificações desses lembretes param de chegar."
+        confirmLabel="Excluir"
+        busy={bulk.isPending}
+        onConfirm={() => bulk.mutate([...sel.selected])}
+      />
     </div>
   );
 }
