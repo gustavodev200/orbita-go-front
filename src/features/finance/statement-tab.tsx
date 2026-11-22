@@ -12,6 +12,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Transaction, TxType } from "@/lib/api/schemas";
 import { findCategory } from "@/lib/categories";
+import { softOf } from "@/lib/colors";
 import { currentMonth, dayGroupLabel, monthLabel, monthName, shiftMonth } from "@/lib/dates";
 import { formatBRL, MINUS } from "@/lib/format";
 import { useAccounts, useCategories } from "@/features/me/hooks";
@@ -31,7 +32,7 @@ function signedTotal(items: Transaction[]) {
 /** Seletor de mês "‹ Setembro 2026 ›". */
 export function MonthPicker({ month, onChange }: { month: string; onChange: (m: string) => void }) {
   return (
-    <div className="flex h-[46px] items-center gap-1 rounded-[14px] border-2 border-bd bg-sf px-1.5">
+    <div className="flex h-10 items-center gap-1 rounded-full bg-sf px-1 shadow-card">
       <button
         type="button"
         aria-label="Mês anterior"
@@ -40,7 +41,7 @@ export function MonthPicker({ month, onChange }: { month: string; onChange: (m: 
       >
         <Icon name="chevron_left" />
       </button>
-      <div className="min-w-[118px] text-center font-display text-base leading-none font-black">{monthLabel(month)}</div>
+      <div className="min-w-[118px] text-center text-sm leading-none font-medium">{monthLabel(month)}</div>
       <button
         type="button"
         aria-label="Próximo mês"
@@ -63,10 +64,10 @@ function TransactionRow({ tx }: { tx: Transaction }) {
 
   return (
     <CardRow className="pr-3">
-      <IconTile icon={cat.icon} color={cat.color} size={44} radius={14} iconSize={24} />
+      <IconTile icon={cat.icon} color={cat.color} soft={softOf(cat.color)} variant="soft" size={42} />
       <div className="min-w-0 flex-1">
-        <div className="truncate font-display text-[15px] leading-[1.2] font-extrabold">{tx.description}</div>
-        <div className="mt-0.5 text-xs leading-[1.3] font-semibold text-mut">
+        <div className="truncate text-[15px] leading-[1.25] font-medium">{tx.description}</div>
+        <div className="mt-1 text-xs leading-none text-mut">
           {cat.name}
           {account ? ` · ${account}` : ""}
         </div>
@@ -75,7 +76,7 @@ function TransactionRow({ tx }: { tx: Transaction }) {
       <DropdownMenu>
         <DropdownMenuTrigger
           aria-label="Opções"
-          className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-transparent text-mut outline-none data-[state=open]:bg-sf2"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-transparent text-mut outline-none hover:bg-sf2 data-[state=open]:bg-sf2"
         >
           <Icon name="more_vert" />
         </DropdownMenuTrigger>
@@ -158,7 +159,8 @@ export function StatementTab() {
         empty={
           <EmptyState
             title="Seu extrato está zerado"
-            text={`Nenhum lançamento em ${monthName(month).toLowerCase()}. Registre o primeiro e ganhe 10 XP.`}
+            icon="receipt_long"
+            text={`Nenhum lançamento em ${monthName(month).toLowerCase()}. Registre gastos e entradas para ver o extrato.`}
             ctaLabel="Novo lançamento"
             onCta={() => openTxSheet()}
           />
@@ -172,8 +174,8 @@ export function StatementTab() {
                 <CardGroupHeader>
                   <span>{dayGroupLabel(day)}</span>
                   <span
-                    className="num text-sm font-extrabold tracking-normal normal-case"
-                    style={{ color: total < 0 ? "var(--r)" : "var(--b)" }}
+                    className="num text-sm font-semibold tracking-normal normal-case"
+                    style={{ color: total < 0 ? "var(--mut)" : "var(--ok)" }}
                   >
                     {total < 0 ? MINUS : "+"}
                     {formatBRL(Math.abs(total))}

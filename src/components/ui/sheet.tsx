@@ -34,7 +34,7 @@ function Sheet({
           <DialogPrimitive.Portal forceMount>
             <DialogPrimitive.Overlay asChild forceMount>
               <motion.div
-                className="fixed inset-0 z-40 bg-[rgba(30,20,10,.45)]"
+                className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}

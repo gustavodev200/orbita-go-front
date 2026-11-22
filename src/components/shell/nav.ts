@@ -1,18 +1,11 @@
 export type NavItem = { href: string; label: string; icon: string; title: string };
 
 export const NAV_ITEMS: NavItem[] = [
-  { href: "/", label: "Hoje", icon: "sunny", title: "Hoje" },
-  { href: "/financas", label: "Finanças", icon: "account_balance_wallet", title: "Finanças" },
+  { href: "/", label: "Início", icon: "home", title: "Início" },
+  { href: "/agenda", label: "Agenda", icon: "calendar_month", title: "Agenda" },
   { href: "/tarefas", label: "Tarefas", icon: "task_alt", title: "Tarefas" },
-  { href: "/lembretes", label: "Lembretes", icon: "notifications_active", title: "Lembretes" },
-  { href: "/perfil", label: "Perfil", icon: "face", title: "Perfil" },
-];
-
-/** Módulos bloqueados na sidebar ("Em breve"). */
-export const SOON_ITEMS = [
-  { label: "Saúde", icon: "favorite" },
-  { label: "Hábitos", icon: "repeat" },
-  { label: "Estudos", icon: "school" },
+  { href: "/financas", label: "Finanças", icon: "account_balance_wallet", title: "Finanças" },
+  { href: "/perfil", label: "Perfil", icon: "person", title: "Perfil" },
 ];
 
 export function isActive(pathname: string, href: string) {

@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardGroupHeader, CardRow } from "@/components/ui/card";
 import type { Recurring, RecurringStatus } from "@/lib/api/schemas";
 import { findCategory } from "@/lib/categories";
+import { softOf } from "@/lib/colors";
 import { currentMonth, formatDM, monthName } from "@/lib/dates";
 import { formatBRL } from "@/lib/format";
 import { useCategories } from "@/features/me/hooks";
@@ -26,10 +27,10 @@ function RecurringRow({ r }: { r: Recurring }) {
   const status = STATUS[r.status ?? "pending"];
   return (
     <CardRow>
-      <IconTile icon={cat.icon} color={cat.color} size={44} radius={14} iconSize={24} />
+      <IconTile icon={cat.icon} color={cat.color} soft={softOf(cat.color)} variant="soft" size={42} />
       <div className="min-w-0 flex-1">
-        <div className="truncate font-display text-[15px] leading-[1.2] font-extrabold">{r.description}</div>
-        <div className="mt-0.5 text-xs leading-[1.3] font-semibold text-mut">
+        <div className="truncate text-[15px] leading-[1.25] font-medium">{r.description}</div>
+        <div className="mt-1 text-xs leading-none text-mut">
           {FREQ_LABEL[r.frequency]}
           {r.dueDate ? ` · próximo ${formatDM(r.dueDate)}` : ""}
         </div>
@@ -71,12 +72,12 @@ export function RecurringsTab() {
   return (
     <div className="grid grid-cols-1 items-start gap-[18px] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
       <Card radius="lg" className="flex flex-col gap-3">
-        <div className="text-[13px] leading-none font-bold text-mut">Comprometido em {monthName(month).toLowerCase()}</div>
+        <div className="text-[13px] leading-none font-medium text-mut">Comprometido em {monthName(month).toLowerCase()}</div>
         <AmountDisplay cents={total} size="stat" />
-        <div className="flex h-4 overflow-hidden rounded-[9px] bg-sf2" aria-hidden>
-          <div className="bg-g transition-[width] duration-700" style={{ width: pct(paid) }} />
-          <div className="bg-y transition-[width] duration-700" style={{ width: pct(pending) }} />
-          <div className="bg-r transition-[width] duration-700" style={{ width: pct(overdue) }} />
+        <div className="flex h-2.5 gap-0.5 overflow-hidden rounded-full bg-sf2" aria-hidden>
+          <div className="rounded-full bg-ok transition-[width] duration-700" style={{ width: pct(paid) }} />
+          <div className="rounded-full bg-y transition-[width] duration-700" style={{ width: pct(pending) }} />
+          <div className="rounded-full bg-r transition-[width] duration-700" style={{ width: pct(overdue) }} />
         </div>
         {income ? (
           <div className="text-[13px] leading-[1.4] font-semibold text-mut">
@@ -85,12 +86,12 @@ export function RecurringsTab() {
         ) : null}
         <div className="mt-1 flex flex-col gap-2">
           {[
-            { label: "Pago", v: paid, c: "var(--g)" },
+            { label: "Pago", v: paid, c: "var(--ok)" },
             { label: "Pendente", v: pending, c: "var(--y)" },
             { label: "Atrasado", v: overdue, c: "var(--r)" },
           ].map((l) => (
-            <div key={l.label} className="flex items-center gap-2 text-[13px] leading-none font-bold">
-              <span className="size-2.5 rounded-[3px]" style={{ background: l.c }} />
+            <div key={l.label} className="flex items-center gap-2 text-[13px] leading-none font-medium">
+              <span className="size-2.5 rounded-full" style={{ background: l.c }} />
               {l.label}
               <span className="num ml-auto">{formatBRL(l.v)}</span>
             </div>
@@ -109,9 +110,9 @@ export function RecurringsTab() {
           )}
           empty={
             <EmptyState
-              mood="feliz"
+              icon="event_repeat"
               title="Nenhuma conta fixa ainda"
-              text="Aluguel, internet, salário… cadastre uma vez e eu cuido dos lembretes."
+              text="Aluguel, internet, salário… cadastre uma vez e acompanhe o vencimento todo mês."
               ctaLabel="Adicionar recorrente"
               onCta={() => openTxSheet({ recurring: true })}
             />

@@ -15,7 +15,7 @@ function GoogleGlyph({ size = 24 }: { size?: number }) {
         background: "conic-gradient(#EA4335 0 25%, #FBBC05 0 50%, #34A853 0 75%, #4285F4 0)",
       }}
     >
-      <span className="rounded-full bg-sf" style={{ width: size / 2, height: size / 2 }} />
+      <span className="rounded-full bg-white" style={{ width: size / 2, height: size / 2 }} />
     </span>
   );
 }
@@ -26,7 +26,7 @@ function GoogleButton({ className, children = "Continuar com Google", ...props }
     <Button
       variant="secondary"
       size="lg"
-      className={cn("h-[58px] gap-3 text-base tracking-[.02em] normal-case", className)}
+      className={cn("h-14 gap-3 bg-white text-base text-[#141416] hover:bg-white/90", className)}
       {...props}
     >
       <GoogleGlyph />

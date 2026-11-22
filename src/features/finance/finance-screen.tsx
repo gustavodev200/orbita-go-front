@@ -12,12 +12,12 @@ import { StatementTab } from "./statement-tab";
 const TABS = [
   { value: "extrato", label: "Extrato", icon: "receipt_long" },
   { value: "recorrentes", label: "Recorrentes", icon: "event_repeat" },
-  { value: "orcamento", label: "Orçamento", icon: "shield_with_heart" },
+  { value: "orcamento", label: "Orçamento", icon: "donut_large" },
   { value: "metas", label: "Metas", icon: "flag" },
 ] as const;
 type TabValue = (typeof TABS)[number]["value"];
 
-/** Finanças: Tabs segmented 3D Extrato | Recorrentes | Orçamento | Metas (aba na URL). */
+/** Finanças: abas em pílula Extrato · Recorrentes · Orçamento · Metas (aba na URL). */
 export function FinanceScreen() {
   const router = useRouter();
   const pathname = usePathname();
@@ -31,11 +31,11 @@ export function FinanceScreen() {
       onValueChange={(v) => router.replace(`${pathname}?tab=${v}`, { scroll: false })}
       className="flex flex-col gap-[18px]"
     >
-      <TabsList className="max-w-[620px]">
+      <TabsList className="-mx-4 px-4 lg:mx-0 lg:px-0">
         {TABS.map((t) => (
           <TabsTrigger key={t.value} value={t.value}>
             <Icon name={t.icon} />
-            <span className="sr-only min-w-0 truncate group-data-[state=active]:not-sr-only lg:not-sr-only">{t.label}</span>
+            {t.label}
           </TabsTrigger>
         ))}
       </TabsList>

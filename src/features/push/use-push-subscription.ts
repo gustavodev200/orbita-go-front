@@ -7,24 +7,25 @@ import { env } from "@/lib/env";
 import { subscribePush, unsubscribePush } from "./api";
 import { urlBase64ToUint8Array } from "./url-base64";
 
-function isPushSupported(): boolean {
+export function isPushSupported(): boolean {
   return typeof window !== "undefined" && "serviceWorker" in navigator && "PushManager" in window;
 }
 
 /** iPhone/iPad — no Safari, a Push API só existe quando o site roda instalado (Tela de Início). */
-function isIOS(): boolean {
+export function isIOS(): boolean {
   if (typeof navigator === "undefined") return false;
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 }
 
-function isStandalone(): boolean {
+export function isStandalone(): boolean {
   if (typeof window === "undefined") return false;
   return window.matchMedia("(display-mode: standalone)").matches || (window.navigator as { standalone?: boolean }).standalone === true;
 }
 
 /**
  * Assina/cancela Web Push no navegador atual. Não mexe em `Me` nem no switch
- * — quem chama decide o que fazer com o resultado (ver `ProfileScreen`).
+ * — quem chama decide o que fazer com o resultado (ver `useEnsurePush` e
+ * `NotificationsCard`).
  */
 export function usePushSubscription() {
   const [isPending, setIsPending] = useState(false);

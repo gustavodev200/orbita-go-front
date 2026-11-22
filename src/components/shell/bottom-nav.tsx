@@ -4,52 +4,51 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { Icon } from "@/components/orbita/icon";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useAppStore } from "@/stores/app-store";
 import { NAV_ITEMS, isActive, type NavItem } from "./nav";
+import { QuickAddMenu } from "./quick-add-menu";
 
 function NavButton({ item, active }: { item: NavItem; active: boolean }) {
   return (
     <Link
       href={item.href}
+      aria-label={item.label}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "flex h-[62px] flex-col items-center justify-center gap-[3px] p-0 font-display text-[11px] leading-none font-extrabold tracking-[.02em] no-underline",
-        active ? "text-gd hover:text-gd" : "text-mut hover:text-mut",
+        "flex h-12 items-center justify-center gap-1.5 rounded-full text-sm leading-none font-medium no-underline transition-[background-color,padding] duration-200",
+        active ? "bg-white px-4 text-[#141416]" : "w-12 text-white/70 hover:text-white",
       )}
     >
-      <span
-        className={cn(
-          "flex h-[34px] w-[50px] items-center justify-center rounded-xl border-2",
-          active ? "border-g bg-gs" : "border-transparent",
-        )}
-      >
-        <Icon name={item.icon} size={26} className={active ? "text-g" : "text-mut"} />
-      </span>
-      {item.label}
+      <Icon name={item.icon} size={22} className={cn(active && "icon-fill text-g")} />
+      {active ? item.label : null}
     </Link>
   );
 }
 
-/** Bottom nav mobile 78px: Hoje · Finanças · FAB + · Tarefas · Perfil. */
+/** Barra flutuante em pílula escura (mobile): Início · Agenda · + · Tarefas · Finanças. */
 export function BottomNav() {
   const pathname = usePathname();
-  const openTxSheet = useAppStore((s) => s.openTxSheet);
-  const [hoje, fin, tar, , perfil] = NAV_ITEMS;
+  const [home, agenda, tarefas, financas] = NAV_ITEMS;
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-30 grid min-h-[78px] grid-cols-5 items-center border-t-2 border-bd bg-sf pb-[calc(0.5rem+env(safe-area-inset-bottom))] pl-[calc(0.375rem+env(safe-area-inset-left))] pr-[calc(0.375rem+env(safe-area-inset-right))] lg:hidden"
+      aria-label="Navegação principal"
+      className="fixed inset-x-0 bottom-0 z-30 flex justify-center px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden"
     >
-      <NavButton item={hoje} active={isActive(pathname, hoje.href)} />
-      <NavButton item={fin} active={isActive(pathname, fin.href)} />
-      <div className="flex justify-center">
-        <Button size="fab" aria-label="Adicionar lançamento" className="-mt-[30px] border-4 border-bg" onClick={() => openTxSheet()}>
-          <Icon name="add" />
-        </Button>
+      <div className="flex items-center gap-1 rounded-full bg-[#141416] p-1.5 shadow-[0_12px_32px_rgba(0,0,0,.25)] dark:bg-[#26262b]">
+        <NavButton item={home} active={isActive(pathname, home.href)} />
+        <NavButton item={agenda} active={isActive(pathname, agenda.href)} />
+        <QuickAddMenu>
+          <button
+            type="button"
+            aria-label="Adicionar"
+            className="flex size-12 items-center justify-center rounded-full bg-g text-white transition-transform active:scale-95"
+          >
+            <Icon name="add" size={28} />
+          </button>
+        </QuickAddMenu>
+        <NavButton item={tarefas} active={isActive(pathname, tarefas.href)} />
+        <NavButton item={financas} active={isActive(pathname, financas.href)} />
       </div>
-      <NavButton item={tar} active={isActive(pathname, tar.href)} />
-      <NavButton item={perfil} active={isActive(pathname, perfil.href)} />
     </nav>
   );
 }

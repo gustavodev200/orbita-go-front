@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { nextFireDate, whenLabel } from "@/features/reminders/reminders-screen";
+import { nextFireDate, occursOn, occurrencesBetween, scheduleFromDate, whenLabel } from "@/features/reminders/recurrence";
 import type { ReminderDraft } from "@/lib/api/schemas";
 
 const TODAY = "2026-09-30"; // quarta-feira
@@ -55,5 +55,46 @@ describe("nextFireDate", () => {
   it("sem repetição, usa a data do rascunho ou hoje", () => {
     expect(nextFireDate(draft({ repeat: "none", date: "2026-12-25" }), TODAY)).toBe("2026-12-25");
     expect(nextFireDate(draft({ repeat: "none", date: null }), TODAY)).toBe(TODAY);
+  });
+});
+
+describe("occursOn", () => {
+  it("diário ocorre todo dia", () => {
+    expect(occursOn(draft({ repeat: "daily" }), "2026-10-07")).toBe(true);
+  });
+  it("semanal só no dia da semana", () => {
+    expect(occursOn(draft({ repeat: "weekly", weekday: 3 }), TODAY)).toBe(true);
+    expect(occursOn(draft({ repeat: "weekly", weekday: 1 }), TODAY)).toBe(false);
+  });
+  it("mensal em mês curto cai no último dia (igual ao back)", () => {
+    expect(occursOn(draft({ repeat: "monthly", dayOfMonth: 31 }), "2026-09-30")).toBe(true);
+    expect(occursOn(draft({ repeat: "monthly", dayOfMonth: 31 }), "2026-09-29")).toBe(false);
+  });
+  it("uma vez: só na data; sem data não aparece", () => {
+    expect(occursOn(draft({ repeat: "none", date: "2026-10-02" }), "2026-10-02")).toBe(true);
+    expect(occursOn(draft({ repeat: "none", date: null }), TODAY)).toBe(false);
+  });
+});
+
+describe("occurrencesBetween", () => {
+  it("lista as quartas de outubro (fim exclusivo)", () => {
+    expect(occurrencesBetween(draft({ repeat: "weekly", weekday: 3 }), "2026-10-01", "2026-10-29")).toEqual([
+      "2026-10-07",
+      "2026-10-14",
+      "2026-10-21",
+      "2026-10-28",
+    ]);
+  });
+});
+
+describe("scheduleFromDate", () => {
+  it("semanal usa o dia da semana da data", () => {
+    expect(scheduleFromDate("weekly", TODAY)).toMatchObject({ repeat: "weekly", weekday: 3, date: null });
+  });
+  it("mensal usa o dia do mês", () => {
+    expect(scheduleFromDate("monthly", "2026-10-05")).toMatchObject({ repeat: "monthly", dayOfMonth: 5 });
+  });
+  it("uma vez guarda a data", () => {
+    expect(scheduleFromDate("none", "2026-10-05")).toMatchObject({ repeat: "none", date: "2026-10-05" });
   });
 });

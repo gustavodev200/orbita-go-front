@@ -3,9 +3,8 @@
 import { useQuery } from "@tanstack/react-query";
 
 import type { Goal } from "@/lib/api/schemas";
-import { gamificationKeys } from "@/features/gamification/api";
 import { useApiMutation, useRewardedMutation } from "@/features/rewards/use-api-mutation";
-import { useAppStore } from "@/stores/app-store";
+import { toast } from "sonner";
 import {
   createGoal,
   createTransaction,
@@ -53,8 +52,8 @@ export function useGoals() {
   return useQuery({ queryKey: financeKeys.goals, queryFn: getGoals });
 }
 
-/** Tudo que um lançamento novo mexe: extrato, resumo, orçamento, missões, chefão. */
-const TX_INVALIDATE = [financeKeys.all, gamificationKeys.all];
+/** Tudo que um lançamento novo mexe: extrato, resumo, orçamento, recorrentes. */
+const TX_INVALIDATE = [financeKeys.all];
 
 export function useParseTransaction() {
   return useApiMutation({ mutationFn: (text: string) => parseTransaction(text) });
@@ -64,7 +63,7 @@ export function useCreateTransaction(onDone?: () => void) {
   return useRewardedMutation({
     mutationFn: (input: TransactionInput) => createTransaction(input),
     invalidate: TX_INVALIDATE,
-    message: (tx) => `Lançamento salvo: ${tx.description}`,
+    message: (tx) => `Salvo: ${tx.description}`,
     onSuccess: () => onDone?.(),
   });
 }
@@ -85,7 +84,7 @@ export function usePayRecurring() {
   return useRewardedMutation({
     mutationFn: ({ id, month }: { id: string; month?: string; name: string }) => payRecurring(id, month),
     invalidate: TX_INVALIDATE,
-    message: (_r, v) => `${v.name} paga em dia`,
+    message: (_r, v) => `${v.name} marcada como paga`,
   });
 }
 
@@ -113,24 +112,15 @@ export function useUpdateGoal(onDone?: (g: Goal) => void) {
   });
 }
 
-/** Depósito na meta: +20 XP (+50 moedas por baú). Último passo → modal Meta. */
-export function useDepositGoal() {
+/** Guardar dinheiro na meta; ao completar, avisa com um toast. */
+export function useDepositGoal(onDone?: () => void) {
   return useRewardedMutation({
     mutationFn: ({ goal, amountCents }: { goal: Goal; amountCents: number }) => depositGoal(goal.id, amountCents),
-    invalidate: [financeKeys.goals, gamificationKeys.all],
-    message: (g, v) =>
-      v.goal.chestsOpened.length < g.chestsOpened.length ? "Baú aberto no caminho!" : "Dinheiro guardado na meta",
+    invalidate: [financeKeys.goals],
     onSuccess: (g, v) => {
-      if (g.completed && !v.goal.completed) {
-        setTimeout(
-          () =>
-            useAppStore.getState().openModal({
-              kind: "meta",
-              goal: { name: g.name, targetCents: g.targetCents, steps: g.steps },
-            }),
-          700,
-        );
-      }
+      if (g.completed && !v.goal.completed) toast.success(`Meta "${g.name}" concluída!`);
+      else toast.success("Valor guardado na meta");
+      onDone?.();
     },
   });
 }

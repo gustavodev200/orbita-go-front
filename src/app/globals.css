@@ -4,37 +4,40 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * órbitaGO design tokens — fonte: design_handoff_orbita/README.md.
- * Sufixo "d" = cor da sombra sólida 3D; sufixo "s" = fundo suave (tint).
- * Os nomes curtos (--g, --sf…) são os mesmos dos protótipos .dc.html, para
- * facilitar a conferência pixel a pixel; os nomes shadcn apontam para eles.
+ * órbitaGO design tokens — visual limpo (cinza-claro + cards brancos + laranja).
+ * `--g` é a COR DE DESTAQUE (primária, laranja) — o nome curto ficou do design
+ * antigo; sufixo "d" = tom escuro (hover/pressionado), "s" = fundo suave (tint).
+ * `--ok` = sucesso/pago (verde).
  */
 :root {
-  --bg: #fbf6ee;
+  --bg: #f4f4f6;
   --sf: #ffffff;
-  --sf2: #f4ede2;
-  --bd: #e9dfd1;
-  --ink: #2b2520;
-  --mut: #7d7064;
-  --g: #20b878;
-  --gd: #149160;
-  --gs: #e1f6ec;
-  --o: #ff8a1e;
-  --od: #d96a00;
-  --os: #fff0e0;
-  --y: #ffc21f;
-  --yd: #d39500;
-  --ys: #fff5d4;
-  --r: #ee5a4f;
-  --rd: #c43e34;
-  --rs: #fde8e5;
-  --b: #2e8bef;
-  --bdk: #1b6ac6;
-  --bs: #e3effd;
+  --sf2: #f1f1f4;
+  --bd: #e6e6eb;
+  --ink: #141416;
+  --mut: #8b8b94;
+  --g: #ff6a1f;
+  --gd: #e2550c;
+  --gs: #ffede3;
+  --ok: #16a34a;
+  --okd: #15803d;
+  --oks: #e7f6ec;
+  --o: #f59e0b;
+  --od: #c27c06;
+  --os: #fff4e0;
+  --y: #f5b400;
+  --yd: #a87b00;
+  --ys: #fff6db;
+  --r: #ef4444;
+  --rd: #c62f2f;
+  --rs: #fdecec;
+  --b: #3b82f6;
+  --bdk: #2563eb;
+  --bs: #e8f0fe;
   --p: #8b5cf6;
-  --pd: #6a3fd6;
-  --ps: #efe8fe;
-  --boss: #2b1f4a;
+  --pd: #6d3fe0;
+  --ps: #f1ebfe;
+  --card-shadow: 0 1px 2px rgba(20, 20, 22, 0.04), 0 4px 16px rgba(20, 20, 22, 0.04);
 
   /* Categorias — fixas nos dois temas */
   --cat-alimentacao: #ff8a1e;
@@ -74,19 +77,20 @@
 }
 
 .dark {
-  --bg: #161310;
-  --sf: #221e1a;
-  --sf2: #2c2722;
-  --bd: #3a332c;
-  --ink: #f6f0e7;
-  --mut: #aa9e91;
-  --gs: #15352a;
-  --os: #3a2614;
-  --ys: #3a3014;
-  --rs: #3e1f1c;
-  --bs: #15283e;
-  --ps: #2a2140;
-  --boss: #1e1633;
+  --bg: #0d0d0f;
+  --sf: #18181b;
+  --sf2: #222226;
+  --bd: #2a2a2f;
+  --ink: #f4f4f5;
+  --mut: #9b9ba4;
+  --gs: #3a1f10;
+  --oks: #12301e;
+  --os: #3a2a0c;
+  --ys: #3a2e0c;
+  --rs: #3b1717;
+  --bs: #142540;
+  --ps: #251b3f;
+  --card-shadow: 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 @theme inline {
@@ -114,7 +118,9 @@
   --color-p: var(--p);
   --color-pd: var(--pd);
   --color-ps: var(--ps);
-  --color-boss: var(--boss);
+  --color-ok: var(--ok);
+  --color-okd: var(--okd);
+  --color-oks: var(--oks);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -135,8 +141,8 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --font-sans: var(--font-figtree), system-ui, sans-serif;
-  --font-display: var(--font-nunito), system-ui, sans-serif;
+  --font-sans: var(--font-inter), system-ui, sans-serif;
+  --font-display: var(--font-inter), system-ui, sans-serif;
 
   --radius-sm: 10px;
   --radius-md: 12px;
@@ -144,6 +150,7 @@
   --radius-xl: 20px;
   --radius-2xl: 24px;
   --radius-3xl: 28px;
+  --shadow-card: var(--card-shadow);
 
   --animate-shimmer: orb-shimmer 1.3s linear infinite;
   --animate-spin-slow: orb-spin 60s linear infinite;
@@ -167,20 +174,20 @@
   50% { opacity: 1; }
 }
 
-/* Superfície "card 3D": borda 2px com base 5px, sem drop shadow. */
+/* Superfície de card: branco sobre o fundo cinza, sem borda, sombra bem leve. */
 @utility card-3d {
   background: var(--sf);
-  border-style: solid;
-  border-width: 2px 2px 5px;
+  border-width: 0;
+  box-shadow: var(--card-shadow);
 }
 
-/* Números: Figtree tabular. */
+/* Números tabulares. */
 @utility num {
-  font-family: var(--font-figtree), system-ui, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
 }
 
-/* Ícones Material Symbols Rounded preenchidos (FILL 1, wght 600). */
+/* Ícones Material Symbols Rounded em contorno (FILL 0, wght 400); `.icon-fill` preenche. */
 .material-symbols-rounded {
   font-family: "Material Symbols Rounded";
   font-weight: normal;
@@ -195,8 +202,11 @@
   direction: ltr;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "liga";
-  font-variation-settings: "FILL" 1, "wght" 600, "GRAD" 0, "opsz" 24;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
   user-select: none;
+}
+.material-symbols-rounded.icon-fill {
+  font-variation-settings: "FILL" 1, "wght" 400, "GRAD" 0, "opsz" 24;
 }
 
 @layer base {
@@ -225,13 +235,10 @@
     cursor: pointer;
   }
   a {
-    color: var(--gd);
-  }
-  a:hover {
-    color: var(--g);
+    color: var(--ink);
   }
   :focus-visible {
-    outline: 3px solid color-mix(in srgb, var(--g) 55%, transparent);
+    outline: 2px solid color-mix(in srgb, var(--g) 60%, transparent);
     outline-offset: 2px;
   }
 }

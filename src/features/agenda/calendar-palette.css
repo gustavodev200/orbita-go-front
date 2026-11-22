@@ -1,0 +1,52 @@
+/*
+ * Paleta do tema "breezy" do FullCalendar mapeada nos tokens do app.
+ * Como tudo aponta para var(--…), o modo escuro (classe .dark no <html>)
+ * troca as cores do calendário junto com o resto da interface.
+ */
+.orbita-calendar {
+  --fc-breezy-primary: var(--g);
+  --fc-breezy-primary-over: var(--gd);
+  --fc-breezy-primary-foreground: #ffffff;
+
+  --fc-breezy-secondary: var(--sf2);
+  --fc-breezy-secondary-over: var(--bd);
+  --fc-breezy-secondary-border: transparent;
+  --fc-breezy-secondary-foreground: var(--ink);
+  --fc-breezy-secondary-icon: var(--mut);
+  --fc-breezy-secondary-icon-over: var(--ink);
+
+  --fc-breezy-event: var(--g);
+  --fc-breezy-event-contrast: #ffffff;
+  --fc-breezy-background-event: var(--gs);
+  --fc-breezy-highlight: color-mix(in srgb, var(--g) 10%, transparent);
+  --fc-breezy-now: var(--g);
+
+  --fc-breezy-selected: var(--sf2);
+
+  --fc-breezy-popover: var(--sf);
+  --fc-breezy-popover-border: var(--bd);
+
+  --fc-breezy-background: var(--sf);
+  --fc-breezy-faint: color-mix(in srgb, var(--ink) 2%, transparent);
+  --fc-breezy-muted: color-mix(in srgb, var(--ink) 5%, transparent);
+  --fc-breezy-strong: color-mix(in srgb, var(--ink) 10%, transparent);
+  --fc-breezy-stronger: color-mix(in srgb, var(--ink) 14%, transparent);
+  --fc-breezy-strongest: color-mix(in srgb, var(--ink) 18%, transparent);
+
+  --fc-breezy-foreground: var(--ink);
+  --fc-breezy-faint-foreground: var(--mut);
+  --fc-breezy-muted-foreground: var(--mut);
+  --fc-breezy-strong-foreground: var(--ink);
+
+  --fc-breezy-border: var(--bd);
+  --fc-breezy-muted-border: var(--sf2);
+  --fc-breezy-strong-border: var(--bd);
+
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+/* Dia selecionado (toque/clique) — anel na cor de destaque. */
+.orbita-calendar .orbita-selected-day {
+  background: color-mix(in srgb, var(--g) 8%, transparent);
+  box-shadow: inset 0 0 0 2px var(--g);
+}

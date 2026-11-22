@@ -8,15 +8,12 @@ import { Progress as ProgressPrimitive } from "radix-ui";
 import { cn } from "@/lib/utils";
 
 /**
- * Barra de progresso do design system.
- * - kind "bar": trilho --sf2, preenchimento com `inset 0 -4px 0 rgba(0,0,0,.12)`.
- * - kind "hp":  trilho com padding 3px e brilho `inset 0 3px 0 rgba(255,255,255,.35)`.
- * A largura anima com spring com overshoot (~800ms).
+ * Barra de progresso fina e arredondada. A largura anima suave (~600ms).
  */
 const trackVariants = cva("relative flex w-full overflow-hidden bg-sf2", {
   variants: {
-    kind: { bar: "", hp: "p-[3px]" },
-    size: { xs: "h-2.5 rounded-md", sm: "h-3.5 rounded-lg", md: "h-4 rounded-[9px]", lg: "h-[18px] rounded-[10px]", xl: "h-5 rounded-[11px]" },
+    kind: { bar: "", hp: "" },
+    size: { xs: "h-1.5 rounded-full", sm: "h-2 rounded-full", md: "h-2.5 rounded-full", lg: "h-3 rounded-full", xl: "h-3.5 rounded-full" },
   },
   defaultVariants: { kind: "bar", size: "sm" },
 });
@@ -28,7 +25,7 @@ const TONES = {
   y: "var(--y)",
   r: "var(--r)",
   p: "var(--p)",
-  boss: "#FF5A6E",
+  ok: "var(--ok)",
 } as const;
 export type ProgressTone = keyof typeof TONES;
 
@@ -55,7 +52,6 @@ function Progress({
 }: ProgressProps) {
   const reduce = useReducedMotion();
   const pct = Math.max(0, Math.min(100, value));
-  const hp = kind === "hp";
   return (
     <ProgressPrimitive.Root
       data-slot="progress"
@@ -67,15 +63,12 @@ function Progress({
         <motion.div
           initial={false}
           animate={{ width: `${pct}%` }}
-          transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 140, damping: 13, mass: 0.9 }}
+          transition={reduce ? { duration: 0 } : { duration: 0.6, ease: [0.2, 0.9, 0.3, 1] }}
           className={cn("h-full", indicatorClassName)}
           style={{
             minWidth: minFill,
             borderRadius: "inherit",
             background: color ?? TONES[tone],
-            boxShadow: hp
-              ? "inset 0 -4px 0 rgba(0,0,0,.15), inset 0 3px 0 rgba(255,255,255,.35)"
-              : "inset 0 -4px 0 rgba(0,0,0,.12)",
           }}
         />
       </ProgressPrimitive.Indicator>

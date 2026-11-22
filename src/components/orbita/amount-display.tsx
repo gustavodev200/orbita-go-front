@@ -5,10 +5,10 @@ import { formatBRL, MINUS } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 /**
- * Valor em BRL com Figtree 800 tabular. `type` define cor e sinal
- * (entrada azul "+", saída vermelha "−"); `zeroMuted` deixa cinza em 0.
+ * Valor em BRL tabular. `type` define cor e sinal
+ * (entrada verde "+", saída vermelha "−"); `zeroMuted` deixa cinza em 0.
  */
-const amountVariants = cva("num font-extrabold whitespace-nowrap", {
+const amountVariants = cva("num font-semibold tracking-[-.01em] whitespace-nowrap", {
   variants: {
     size: {
       sm: "text-[15px] leading-none",
@@ -42,7 +42,7 @@ function AmountDisplay({ cents, type = "neutral", signed, size, zeroMuted, compa
   const abs = formatBRL(Math.abs(cents), { compact });
   const sign = !showSign ? (cents < 0 ? MINUS : "") : type === "expense" ? MINUS : type === "income" ? "+" : cents < 0 ? MINUS : "";
   const color =
-    zeroMuted && cents === 0 ? "text-mut" : type === "expense" ? "text-r" : type === "income" ? "text-b" : "text-ink";
+    zeroMuted && cents === 0 ? "text-mut" : type === "expense" ? "text-r" : type === "income" ? "text-ok" : "text-ink";
   return (
     <span className={cn(amountVariants({ size }), color, className)}>
       {sign}

@@ -3,23 +3,48 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-import { Cobre } from "@/components/orbita/cobre";
+import { LogoMark } from "@/components/orbita/logo";
 import { ErrorState } from "@/components/orbita/states";
 import { useSession } from "@/features/auth/use-session";
 import { NewTransaction } from "@/features/finance/new-transaction/new-transaction";
 import { useMe } from "@/features/me/hooks";
+import { ReminderDialog } from "@/features/reminders/reminder-dialog";
+import { TaskDialog } from "@/features/tasks/task-dialog";
 import { hasSupabaseEnv } from "@/lib/env";
+import { useAppStore } from "@/stores/app-store";
 import { AppHeader } from "./app-header";
 import { BottomNav } from "./bottom-nav";
-import { RewardLayer } from "./reward-layer";
 import { Sidebar } from "./sidebar";
 import { useAdoptServerTheme } from "./use-theme";
 
 function Splash() {
   return (
     <div className="flex min-h-dvh flex-1 items-center justify-center">
-      <Cobre mood="feliz" size={96} />
+      <LogoMark size={56} className="animate-pulse" />
     </div>
+  );
+}
+
+/** Diálogos globais de criação rápida (botão + e agenda). */
+function QuickAddLayer() {
+  const quickAdd = useAppStore((s) => s.quickAdd);
+  const close = useAppStore((s) => s.closeQuickAdd);
+  const onOpenChange = (o: boolean) => !o && close();
+  return (
+    <>
+      {quickAdd.kind === "task" ? (
+        <TaskDialog
+          key={quickAdd.editing?.id ?? `new-${quickAdd.date}`}
+          open
+          onOpenChange={onOpenChange}
+          task={quickAdd.editing}
+          initialDate={quickAdd.date}
+        />
+      ) : null}
+      {quickAdd.kind === "reminder" ? (
+        <ReminderDialog key={`r-${quickAdd.date}`} open onOpenChange={onOpenChange} initialDate={quickAdd.date} />
+      ) : null}
+    </>
   );
 }
 
@@ -56,13 +81,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <Sidebar />
       <div className="relative flex min-w-0 flex-1 flex-col">
         <AppHeader />
-        <main className="flex-1 pb-[calc(78px+env(safe-area-inset-bottom))] lg:pb-0">
-          <div className="mx-auto max-w-[1160px] px-3.5 pt-4 pb-7 lg:px-8 lg:pt-7 lg:pb-12">{children}</div>
+        <main className="flex-1 pb-[calc(96px+env(safe-area-inset-bottom))] lg:pb-0">
+          <div className="mx-auto max-w-[1120px] px-4 pt-2 pb-6 lg:px-8 lg:pt-4 lg:pb-12">{children}</div>
         </main>
         <BottomNav />
       </div>
       <NewTransaction />
-      <RewardLayer />
+      <QuickAddLayer />
     </div>
   );
 }

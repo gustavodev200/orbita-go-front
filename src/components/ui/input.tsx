@@ -3,24 +3,27 @@ import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "@/lib/utils";
 
-/** Container do input: 50px, raio 14, borda 2px. Tom "ai" é o campo roxo ✨. */
-const fieldVariants = cva("flex min-w-0 items-center gap-2 border-2 transition-colors focus-within:border-g", {
-  variants: {
-    tone: {
-      default: "border-bd bg-sf",
-      ai: "border-p bg-ps focus-within:border-p",
-      muted: "border-transparent bg-sf2",
-      raised: "border-bd border-b-4 bg-sf",
+/** Campo em pílula branca (ou cinza `muted`), foco com anel laranja. */
+const fieldVariants = cva(
+  "flex min-w-0 items-center gap-2 transition-shadow focus-within:ring-2 focus-within:ring-[color:color-mix(in_srgb,var(--g)_45%,transparent)]",
+  {
+    variants: {
+      tone: {
+        default: "bg-sf shadow-card",
+        ai: "bg-sf shadow-card",
+        muted: "bg-sf2",
+        raised: "bg-sf2",
+      },
+      size: {
+        md: "h-12 rounded-full px-4",
+        lg: "h-[52px] rounded-full px-4",
+        xl: "min-h-14 rounded-full px-5",
+        hero: "h-14 rounded-2xl px-4",
+      },
     },
-    size: {
-      md: "h-[50px] rounded-[14px] px-3.5",
-      lg: "h-[52px] rounded-2xl px-3.5",
-      xl: "min-h-14 rounded-2xl px-3.5",
-      hero: "h-[60px] rounded-2xl px-[18px]",
-    },
+    defaultVariants: { tone: "default", size: "md" },
   },
-  defaultVariants: { tone: "default", size: "md" },
-});
+);
 
 type InputProps = Omit<React.ComponentProps<"input">, "size"> &
   VariantProps<typeof fieldVariants> & {
@@ -38,7 +41,7 @@ function Input({ className, containerClassName, tone, size, icon, trailing, ...p
       <input
         data-slot="input"
         className={cn(
-          "min-w-0 flex-1 border-none bg-transparent text-[15px] leading-[1.3] font-semibold text-ink outline-none placeholder:text-mut/80",
+          "min-w-0 flex-1 border-none bg-transparent text-[15px] leading-[1.3] text-ink outline-none placeholder:text-mut",
           className,
         )}
         {...props}

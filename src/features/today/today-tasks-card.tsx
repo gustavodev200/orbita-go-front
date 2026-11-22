@@ -2,65 +2,68 @@
 
 import Link from "next/link";
 
-import { Checkbox3D } from "@/components/orbita/checkbox-3d";
 import { EmptyState, QueryState } from "@/components/orbita/states";
-import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
-import { PRIORITY_COLOR } from "@/lib/colors";
-import { todayISO } from "@/lib/dates";
-import { cn } from "@/lib/utils";
+import { Progress } from "@/components/ui/progress";
+import { TaskRow, groupOf } from "@/features/tasks/tasks-screen";
 import { useTasks, useToggleTask } from "@/features/tasks/hooks";
-import { useRouter } from "next/navigation";
+import { todayISO } from "@/lib/dates";
+import { useAppStore } from "@/stores/app-store";
 
-/** 3 tarefas de hoje + "Ver todas". */
+/** Tarefas de hoje (inclui atrasadas pendentes) + progresso do dia. */
 export function TodayTasksCard({ className }: { className?: string }) {
-  const router = useRouter();
   const tasks = useTasks();
   const toggle = useToggleTask();
+  const openQuickAdd = useAppStore((s) => s.openQuickAdd);
   const today = todayISO();
-  const list = (tasks.data ?? []).filter((t) => t.dueDate && t.dueDate.slice(0, 10) <= today).slice(0, 3);
+  const all = tasks.data ?? [];
+  const list = all.filter((t) => {
+    const g = groupOf(t, today);
+    return g === "atrasadas" || g === "hoje";
+  });
+  const visible = [...list.filter((t) => !t.done), ...list.filter((t) => t.done)].slice(0, 6);
+  const done = list.filter((t) => t.done).length;
 
   return (
-    <Card className={className}>
-      <div className="flex flex-col gap-2.5">
+    <Card className={className} padding="none">
+      <div className="flex flex-col gap-3 px-5 pt-5">
         <CardHeader>
           <CardTitle>Tarefas de hoje</CardTitle>
-          <Button asChild variant="link">
-            <Link href="/tarefas">Ver todas</Link>
-          </Button>
+          <Link href="/tarefas" className="text-sm leading-none text-g no-underline hover:text-gd">
+            Ver todas
+          </Link>
         </CardHeader>
-        <QueryState
-          query={tasks}
-          compact
-          isEmpty={list.length === 0}
-          empty={
-            <EmptyState
-              compact
-              title="Dia livre!"
-              text="Nenhuma tarefa pra hoje. Que tal planejar amanhã?"
-              ctaLabel="Criar tarefa"
-              onCta={() => router.push("/tarefas")}
-            />
-          }
-        >
-          {list.map((t) => (
-            <div key={t.id} className="flex items-center gap-3 py-2">
-              <Checkbox3D size={30} checked={t.done} onCheckedChange={() => toggle(t)} label={`Concluir ${t.title}`} />
-              <button
-                type="button"
-                onClick={() => toggle(t)}
-                className={cn(
-                  "flex-1 bg-transparent text-left text-[15px] leading-[1.3] font-bold text-ink",
-                  t.done && "line-through opacity-50",
-                )}
-              >
-                {t.title}
-              </button>
-              <span className="size-2.5 shrink-0 rounded-full" style={{ background: PRIORITY_COLOR[t.priority] }} />
-            </div>
-          ))}
-        </QueryState>
+        {list.length ? (
+          <div className="flex items-center gap-3">
+            <Progress value={(done / list.length) * 100} size="sm" className="flex-1" />
+            <span className="num text-xs leading-none text-mut">
+              {done}/{list.length}
+            </span>
+          </div>
+        ) : null}
       </div>
+      <QueryState
+        query={tasks}
+        compact
+        isEmpty={list.length === 0}
+        frame={(node) => <div className="px-5 pb-5">{node}</div>}
+        empty={
+          <EmptyState
+            compact
+            icon="task_alt"
+            title="Nada pra hoje"
+            text="Que tal planejar o dia?"
+            ctaLabel="Nova tarefa"
+            onCta={() => openQuickAdd({ kind: "task", date: today })}
+          />
+        }
+      >
+        <div className="flex flex-col [&>*+*]:border-t [&>*+*]:border-sf2 px-1 pb-2">
+          {visible.map((t) => (
+            <TaskRow key={t.id} task={t} group={groupOf(t, today)} onToggle={toggle} />
+          ))}
+        </div>
+      </QueryState>
     </Card>
   );
 }

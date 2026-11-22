@@ -11,11 +11,11 @@ function PanelHeader({ title, onClose }: { title: string; onClose: () => void })
         type="button"
         onClick={onClose}
         aria-label="Fechar"
-        className="flex size-10 items-center justify-center rounded-xl bg-transparent text-mut hover:text-ink"
+        className="flex size-10 items-center justify-center rounded-full bg-sf2 text-ink hover:bg-bd"
       >
-        <Icon name="close" size={28} />
+        <Icon name="close" size={22} />
       </button>
-      <div className="flex-1 text-center font-display text-lg leading-none font-black">{title}</div>
+      <div className="flex-1 text-center text-base leading-none font-semibold">{title}</div>
       <div className="w-10" />
     </div>
   );
@@ -29,11 +29,11 @@ function PanelFooter({ className, ...props }: React.ComponentProps<"div">) {
   return <div className={cn("shrink-0 px-4 pt-3 pb-4", className)} {...props} />;
 }
 
-/** Rótulo de campo em caixa alta (Nunito 900 13px, --mut). */
+/** Rótulo de campo (13px, --mut). */
 function FieldLabel({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("mb-2 font-display text-[13px] leading-none font-black tracking-[.08em] text-mut uppercase", className)}
+      className={cn("mb-2 text-[13px] leading-none font-medium text-mut", className)}
       {...props}
     />
   );

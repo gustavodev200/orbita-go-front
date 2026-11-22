@@ -7,13 +7,10 @@ import { FALLBACK_CATEGORIES } from "@/lib/categories";
 import { useApiMutation } from "@/features/rewards/use-api-mutation";
 import { useAppStore } from "@/stores/app-store";
 import {
-  buyItem,
   getAccounts,
-  getAchievements,
   getCategories,
   getCompare,
   getMe,
-  getShop,
   meKeys,
   updateMe,
   type UpdateMeInput,
@@ -51,27 +48,6 @@ export function useAccounts() {
   return useQuery({ queryKey: meKeys.accounts, queryFn: getAccounts, staleTime: 5 * 60_000 });
 }
 
-export function useAchievements() {
-  return useQuery({ queryKey: meKeys.achievements, queryFn: getAchievements });
-}
-
-export function useShop() {
-  return useQuery({ queryKey: meKeys.shop, queryFn: getShop });
-}
-
 export function useCompare() {
   return useQuery({ queryKey: meKeys.compare, queryFn: getCompare });
-}
-
-export function useBuyItem() {
-  const qc = useQueryClient();
-  const setMe = useAppStore((s) => s.setMe);
-  return useApiMutation({
-    mutationFn: (key: string) => buyItem(key),
-    invalidate: [meKeys.shop],
-    onSuccess: (me) => {
-      qc.setQueryData(meKeys.me, me);
-      setMe(me);
-    },
-  });
 }

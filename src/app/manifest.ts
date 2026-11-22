@@ -8,11 +8,11 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "órbitaGO",
     short_name: "órbitaGO",
-    description: "Sua vida, subindo de nível. Finanças e tarefas com ofensivas, missões e o Cobre torcendo por você.",
+    description: "Seu dia em um lugar só: agenda, lembretes, tarefas e finanças.",
     start_url: "/",
     display: "standalone",
-    background_color: "#FBF6EE",
-    theme_color: "#20B878",
+    background_color: "#F4F4F6",
+    theme_color: "#F4F4F6",
     icons: [
       { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
       { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },

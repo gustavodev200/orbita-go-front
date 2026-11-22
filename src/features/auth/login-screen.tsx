@@ -4,27 +4,21 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 
-import { Cobre } from "@/components/orbita/cobre";
 import { GoogleButton } from "@/components/orbita/google-button";
 import { Icon } from "@/components/orbita/icon";
-import { useIsDesktop } from "@/hooks/use-media-query";
+import { LogoMark } from "@/components/orbita/logo";
 import { hasSupabaseEnv } from "@/lib/env";
 import { safeNextPath, signInWithGoogle } from "./auth";
 
-function OrbitTile({ icon, bg, shadow, size, className }: { icon: string; bg: string; shadow: string; size: number; className: string }) {
-  return (
-    <div
-      className={`absolute flex items-center justify-center ${className}`}
-      style={{ width: size, height: size, borderRadius: size / 3, background: bg, boxShadow: `inset 0 -4px 0 ${shadow}` }}
-    >
-      <Icon name={icon} size={size * 0.6} className="text-white" />
-    </div>
-  );
-}
+const FEATURES = [
+  { icon: "calendar_month", label: "Agenda" },
+  { icon: "notifications", label: "Lembretes" },
+  { icon: "task_alt", label: "Tarefas" },
+  { icon: "account_balance_wallet", label: "Finanças" },
+];
 
-/** Login: hero verde com Cobre comemorando e 2 órbitas girando; só "Continuar com Google". */
+/** Login: tela escura com brilho laranja, chamada curta e "Continuar com Google". */
 export function LoginScreen() {
-  const desktop = useIsDesktop();
   const params = useSearchParams();
   const next = safeNextPath(params.get("next"));
   const [redirecting, setRedirecting] = useState(false);
@@ -32,13 +26,6 @@ export function LoginScreen() {
   useEffect(() => {
     if (params.has("error")) toast.error("Não foi possível entrar com o Google. Tente de novo.");
   }, [params]);
-
-  // No mobile, o hero não tem padding e o anel ocupa a largura do device: em
-  // 360-390px, um anel de 360px deixava os tiles decorativos (que "sentam"
-  // na borda do anel, ±20px) parcial ou totalmente cortados pelo
-  // `overflow-hidden`. 300/210 dão folga suficiente até 360px.
-  const o1 = desktop ? 380 : 210;
-  const o2 = desktop ? 560 : 300;
 
   async function login() {
     if (!hasSupabaseEnv()) {
@@ -54,38 +41,38 @@ export function LoginScreen() {
   }
 
   return (
-    <main className="flex min-h-dvh flex-col bg-bg lg:flex-row">
-      <div className="relative flex min-h-[360px] flex-none items-center justify-center overflow-hidden rounded-b-[40px] bg-g lg:min-h-dvh lg:flex-[1.1] lg:rounded-none">
-        <div
-          className="absolute animate-spin-slow rounded-full border-[3px] border-dashed border-white/28"
-          style={{ width: o1, height: o1 }}
-        >
-          <OrbitTile icon="bolt" bg="var(--y)" shadow="var(--yd)" size={36} className="-top-[18px] left-1/2 -ml-[18px]" />
-          <OrbitTile icon="local_fire_department" bg="var(--o)" shadow="var(--od)" size={36} className="top-1/2 -left-[18px] -mt-[18px]" />
+    <main className="relative flex min-h-dvh flex-col overflow-hidden bg-[#0d0d0f] text-white lg:items-center lg:justify-center">
+      <div aria-hidden className="absolute -top-40 -right-32 size-[520px] rounded-full bg-[#ff6a1f]/30 blur-[100px]" />
+      <div aria-hidden className="absolute -bottom-48 -left-40 size-[420px] rounded-full bg-[#ff6a1f]/15 blur-[90px]" />
+
+      <div className="relative flex flex-1 flex-col px-6 pt-[calc(2rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))] lg:w-full lg:max-w-[440px] lg:flex-none lg:p-0">
+        <div className="flex items-center gap-2.5">
+          <LogoMark size={36} className="[--ink:#fff]" />
+          <span className="text-xl leading-none font-semibold tracking-[-.02em]">
+            órbita<span className="text-[#ff6a1f]">GO</span>
+          </span>
         </div>
-        <div
-          className="absolute animate-spin-slower-reverse rounded-full border-[3px] border-white/14"
-          style={{ width: o2, height: o2 }}
-        >
-          <OrbitTile icon="task_alt" bg="var(--b)" shadow="var(--bdk)" size={40} className="top-1/2 -right-5 -mt-5" />
-          <OrbitTile icon="savings" bg="var(--p)" shadow="var(--pd)" size={40} className="-bottom-5 left-1/2 -ml-5" />
-        </div>
-        <Cobre mood="comemorando" size={desktop ? 220 : 150} />
-      </div>
-      <div className="flex flex-1 items-center justify-center px-6 pt-7 pb-9 lg:p-12">
-        <div className="flex w-full max-w-[400px] flex-col gap-3.5 text-center lg:text-left">
-          <div className="font-display text-[34px] leading-none font-black tracking-[-.02em] text-g lg:text-[40px]">órbitaGO</div>
-          <h1 className="m-0 font-display text-[28px] leading-[1.1] font-black text-balance text-ink lg:text-[40px]">
-            Sua vida, subindo de nível.
+
+        <div className="mt-auto flex flex-col gap-5 pt-16">
+          <div className="flex flex-wrap gap-2">
+            {FEATURES.map((f) => (
+              <span key={f.label} className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-2 text-[13px] leading-none text-white/85">
+                <Icon name={f.icon} size={16} className="text-[#ff6a1f]" />
+                {f.label}
+              </span>
+            ))}
+          </div>
+          <h1 className="m-0 text-[40px] leading-[1.05] font-semibold tracking-[-.03em] text-balance lg:text-[48px]">
+            Seu dia, organizado em um só lugar.
           </h1>
-          <p className="m-0 mb-2.5 text-base leading-normal font-semibold text-pretty text-mut">
-            Finanças e tarefas num lugar só, com ofensivas, missões e um mascote que torce por você.
+          <p className="m-0 text-base leading-normal text-pretty text-white/60">
+            Compromissos, lembretes que chegam no celular, tarefas e o controle do seu dinheiro — simples para usar todo dia.
           </p>
-          <GoogleButton onClick={login} disabled={redirecting}>
+          <GoogleButton onClick={login} disabled={redirecting} className="mt-2">
             {redirecting ? "Redirecionando…" : "Continuar com Google"}
           </GoogleButton>
-          <p className="m-0 mt-2 text-xs leading-normal font-semibold text-mut">
-            Ao continuar, você aceita os Termos e a Política de Privacidade. Nada de senha pra lembrar.
+          <p className="m-0 text-xs leading-normal text-white/40">
+            Ao continuar, você aceita os Termos e a Política de Privacidade. Nada de senha para lembrar.
           </p>
         </div>
       </div>

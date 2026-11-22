@@ -2,7 +2,7 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-/** "Missões diárias ………… renovam em 9h 12min" — título H2 20/900 + auxiliar. */
+/** "Categoria ………… Ver tudo" — título de seção + auxiliar/ação à direita. */
 function SectionHeader({
   title,
   aside,
@@ -16,8 +16,8 @@ function SectionHeader({
 }) {
   return (
     <div className={cn("flex items-baseline justify-between gap-3 px-1", className)}>
-      <h2 className={cn("m-0 font-display leading-[1.2] font-black", size === "lg" ? "text-xl" : "text-lg")}>{title}</h2>
-      {aside != null ? <div className="text-[13px] leading-none font-bold text-mut">{aside}</div> : null}
+      <h2 className={cn("m-0 leading-[1.2] font-semibold tracking-[-.01em]", size === "lg" ? "text-lg" : "text-base")}>{title}</h2>
+      {aside != null ? <div className="text-[13px] leading-none text-mut">{aside}</div> : null}
     </div>
   );
 }

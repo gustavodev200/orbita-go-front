@@ -5,47 +5,42 @@ import { Slot } from "radix-ui";
 import { cn } from "@/lib/utils";
 
 /**
- * Botão 3D do órbitaGO.
- * - Sólidos: sombra sólida `0 var(--press) 0 var(--btn-sh)`; no :active desce
- *   `--press` px e perde a sombra (80ms).
- * - Secundário: borda 2px com base 5px; no :active desce 3px e a base vira 2px.
- * `--press` vem do size (5px padrão, 4px pequeno); `--btn-sh` vem da variante.
+ * Botão em pílula, plano. `primary` = laranja (ação principal da tela),
+ * `dark` = preto/tinta (ação forte secundária, ex.: "Aplicar"), `secondary`
+ * = cinza suave. Os demais nomes ficaram por compatibilidade e mapeiam
+ * para essas mesmas aparências.
  */
-const solid =
-  "shadow-[0_var(--press)_0_var(--btn-sh)] active:translate-y-(--press) active:shadow-none text-white";
-
 const buttonVariants = cva(
   [
     "group/button relative inline-flex shrink-0 items-center justify-center gap-2 whitespace-nowrap select-none",
-    "font-display font-black uppercase tracking-[.05em] leading-none",
-    "transition-[transform,box-shadow,border-width,background-color] duration-[80ms] outline-none",
-    "disabled:pointer-events-none disabled:!bg-bd disabled:!text-mut disabled:!shadow-none disabled:!border-transparent",
-    "[&_.material-symbols-rounded]:text-[1.45em]",
+    "font-sans font-semibold leading-none",
+    "transition-[background-color,color,opacity,transform] duration-150 outline-none active:scale-[.98]",
+    "disabled:pointer-events-none disabled:opacity-45",
+    "[&_.material-symbols-rounded]:text-[1.35em]",
   ],
   {
     variants: {
       variant: {
-        primary: cn(solid, "bg-g [--btn-sh:var(--gd)]"),
-        orange: cn(solid, "bg-o [--btn-sh:var(--od)]"),
-        gold: cn(solid, "bg-y text-[#3A2800] [--btn-sh:var(--yd)]"),
-        blue: cn(solid, "bg-b [--btn-sh:var(--bdk)]"),
-        danger: cn(solid, "bg-r [--btn-sh:var(--rd)]"),
-        ai: cn(solid, "bg-p [--btn-sh:var(--pd)]"),
-        white: cn(solid, "bg-white text-gd [--btn-sh:#0E7A50]"),
-        secondary:
-          "bg-sf text-ink border-2 border-bd border-b-[5px] active:translate-y-[3px] active:border-b-2",
-        "secondary-danger":
-          "bg-sf text-r border-2 border-[color:var(--r)] border-b-[5px] active:translate-y-[3px] active:border-b-2",
-        ghost: "bg-transparent text-mut hover:text-ink normal-case tracking-normal",
-        link: "h-auto! px-0! bg-transparent text-b text-[13px]! font-extrabold tracking-[.05em] hover:text-bdk",
+        primary: "bg-g text-white hover:bg-gd",
+        orange: "bg-g text-white hover:bg-gd",
+        dark: "bg-ink text-bg hover:opacity-90",
+        gold: "bg-ink text-bg hover:opacity-90",
+        blue: "bg-ink text-bg hover:opacity-90",
+        ai: "bg-ink text-bg hover:opacity-90",
+        danger: "bg-r text-white hover:bg-rd",
+        white: "bg-white text-ink hover:bg-white/90",
+        secondary: "bg-sf2 text-ink hover:bg-bd",
+        "secondary-danger": "bg-rs text-r hover:opacity-90",
+        ghost: "bg-transparent text-mut hover:text-ink",
+        link: "h-auto! px-0! bg-transparent text-g text-sm! font-medium hover:text-gd active:scale-100",
       },
       size: {
-        lg: "h-14 px-5 text-base rounded-2xl [--press:5px]",
-        md: "h-13 px-[22px] text-[15px] rounded-2xl [--press:5px]",
-        sm: "h-10 px-3.5 text-[13px] tracking-[.04em] rounded-xl [--press:4px]",
-        xs: "h-9 px-3 text-xs tracking-[.04em] rounded-xl [--press:4px]",
-        fab: "size-[62px] rounded-[22px] [--press:5px] [&_.material-symbols-rounded]:text-[38px]",
-        icon: "size-13 rounded-2xl [--press:5px] [&_.material-symbols-rounded]:text-[30px]",
+        lg: "h-14 px-6 text-base rounded-full",
+        md: "h-12 px-5 text-[15px] rounded-full",
+        sm: "h-10 px-4 text-sm rounded-full",
+        xs: "h-8 px-3 text-[13px] rounded-full",
+        fab: "size-14 rounded-full [&_.material-symbols-rounded]:text-[30px]",
+        icon: "size-12 rounded-full [&_.material-symbols-rounded]:text-[24px]",
       },
       block: { true: "w-full" },
     },
@@ -69,15 +64,19 @@ function Button({ className, variant, size, block, asChild = false, type, ...pro
   );
 }
 
-/** Pill "+15 XP" dentro de botões sólidos. */
-function ButtonTag({ className, ...props }: React.ComponentProps<"span">) {
+/** Botão redondo de ícone (sino, voltar, filtros) — branco sobre o fundo cinza. */
+function IconButton({ className, ...props }: React.ComponentProps<"button">) {
   return (
-    <span
-      className={cn("rounded-lg bg-white/25 px-2 py-1 text-[13px] leading-none", className)}
+    <button
+      type="button"
+      className={cn(
+        "flex size-11 shrink-0 items-center justify-center rounded-full bg-sf text-ink shadow-card transition-colors hover:bg-sf2 [&_.material-symbols-rounded]:text-[22px]",
+        className,
+      )}
       {...props}
     />
   );
 }
 
-export { Button, ButtonTag, buttonVariants };
+export { Button, IconButton, buttonVariants };
 export type { ButtonProps };

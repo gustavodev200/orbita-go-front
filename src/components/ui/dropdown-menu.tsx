@@ -20,7 +20,7 @@ function DropdownMenuContent({
       <DropdownPrimitive.Content
         sideOffset={sideOffset}
         className={cn(
-          "z-50 flex gap-1.5 rounded-[14px] border-2 border-bd bg-sf p-1.5 shadow-[0_10px_24px_rgba(0,0,0,.12)]",
+          "z-50 flex gap-1.5 rounded-2xl bg-sf p-1.5 shadow-[0_10px_30px_rgba(0,0,0,.12)]",
           "data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95",
           className,
         )}
@@ -31,7 +31,7 @@ function DropdownMenuContent({
 }
 
 const itemVariants = cva(
-  "flex h-9 cursor-pointer items-center gap-1 rounded-[10px] px-3 font-display text-[13px] leading-none font-extrabold outline-none select-none data-[highlighted]:brightness-95 [&_.material-symbols-rounded]:text-lg",
+  "flex h-9 cursor-pointer items-center gap-1 rounded-[10px] px-3 text-sm leading-none font-medium outline-none select-none data-[highlighted]:brightness-95 [&_.material-symbols-rounded]:text-lg",
   {
     variants: {
       tone: { info: "bg-bs text-bdk", danger: "bg-rs text-rd", default: "bg-sf2 text-ink" },

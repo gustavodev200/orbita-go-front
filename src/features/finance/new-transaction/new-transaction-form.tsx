@@ -7,11 +7,10 @@ import { toast } from "sonner";
 import { AmountDisplay } from "@/components/orbita/amount-display";
 import { CategoryGridButton } from "@/components/orbita/category-chip";
 import { ChoiceChip } from "@/components/orbita/choice-chip";
-import { Cobre } from "@/components/orbita/cobre";
 import { Icon } from "@/components/orbita/icon";
 import { NumericKeypad, applyKey, type KeypadKey } from "@/components/orbita/numeric-keypad";
 import { SegmentedControl } from "@/components/orbita/segmented-control";
-import { Button, ButtonTag } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import type { Category, Frequency, ParsedTx, Transaction, TxType } from "@/lib/api/schemas";
@@ -178,11 +177,11 @@ export function NewTransactionForm({
           type="button"
           onClick={onClose}
           aria-label="Fechar"
-          className="flex size-10 items-center justify-center rounded-xl bg-transparent text-mut hover:text-ink"
+          className="flex size-10 items-center justify-center rounded-full bg-sf2 text-ink hover:bg-bd"
         >
-          <Icon name="close" size={28} />
+          <Icon name="close" size={22} />
         </button>
-        <div className="flex-1 text-center font-display text-lg leading-none font-black">{title}</div>
+        <div className="flex-1 text-center text-base leading-none font-semibold">{title}</div>
         <div className="w-10" />
       </div>
 
@@ -192,14 +191,14 @@ export function NewTransactionForm({
             tone="ai"
             size="lg"
             containerClassName="pr-1.5 pl-3.5"
-            icon={<Icon name="auto_awesome" className="text-p" />}
+            icon={<Icon name="auto_awesome" size={20} className="text-g" />}
             value={nl}
             onChange={(e) => setNl(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && runParse()}
-            placeholder="Digite como fala ✨  ex.: gastei 45 no ifood ontem"
+            placeholder="Ex.: gastei 45 no ifood ontem"
             aria-label="Digite como fala"
             trailing={
-              <Button variant="ai" size="sm" className="h-10 px-3 text-xs [--press:3px]" onClick={runParse} disabled={parse.isPending}>
+              <Button variant="dark" size="xs" onClick={runParse} disabled={parse.isPending}>
                 {parse.isPending ? "…" : "Ler"}
               </Button>
             }
@@ -214,11 +213,11 @@ export function NewTransactionForm({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.3 }}
-              className="flex flex-col gap-2.5 rounded-2xl border-2 border-dashed border-p bg-sf p-3"
+              className="flex flex-col gap-2.5 rounded-2xl bg-sf p-3 shadow-card"
             >
               <div className="flex items-center gap-2">
-                <Cobre mood="feliz" size={32} />
-                <div className="font-display text-sm leading-[1.3] font-extrabold">Entendi assim, confere?</div>
+                <Icon name="auto_awesome" size={20} className="text-g" />
+                <div className="font-display text-sm leading-[1.3] font-semibold">Entendi assim, confere?</div>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {[
@@ -227,20 +226,20 @@ export function NewTransactionForm({
                   { icon: "sell", v: `${ai.description} · ${aiCat.name}` },
                   { icon: "event", v: dateChipLabel(ai.date.slice(0, 10), today) },
                 ].map((c) => (
-                  <div key={c.icon} className="flex items-center gap-1 rounded-[10px] bg-sf2 px-2.5 py-1.5 text-[13px] leading-none font-extrabold">
-                    <Icon name={c.icon} size={16} className="text-p" />
+                  <div key={c.icon} className="flex items-center gap-1 rounded-[10px] bg-sf2 px-2.5 py-1.5 text-[13px] leading-none font-semibold">
+                    <Icon name={c.icon} size={16} className="text-g" />
                     {c.v}
                   </div>
                 ))}
               </div>
               <div className="flex gap-2">
-                <Button size="sm" className="h-[42px] flex-1" onClick={applyAi}>
+                <Button size="sm" className="flex-1" onClick={applyAi}>
                   Confirmar
                 </Button>
                 <button
                   type="button"
                   onClick={() => setAi(null)}
-                  className="h-[42px] rounded-xl border-2 border-bd bg-sf px-3.5 font-display text-[13px] leading-none font-black text-mut uppercase"
+                  className="h-10 rounded-full bg-sf2 px-4 text-[13px] leading-none font-medium text-ink"
                 >
                   Ajustar
                 </button>
@@ -259,7 +258,7 @@ export function NewTransactionForm({
           }}
           options={[
             { value: "expense", label: "Saída", icon: "north_east", color: "var(--r)", shadow: "var(--rd)" },
-            { value: "income", label: "Entrada", icon: "south_west", color: "var(--b)", shadow: "var(--bdk)" },
+            { value: "income", label: "Entrada", icon: "south_west", color: "var(--ok)", shadow: "var(--okd)" },
           ]}
         />
 
@@ -269,7 +268,7 @@ export function NewTransactionForm({
         </div>
 
         <div>
-          <div className="mb-2 font-display text-[13px] leading-none font-black tracking-[.08em] text-mut uppercase">Categoria</div>
+          <div className="mb-2 text-[13px] leading-none font-medium text-mut">Categoria</div>
           <div className="grid grid-cols-4 gap-2">
             {grid.map((c) => (
               <CategoryGridButton
@@ -319,23 +318,23 @@ export function NewTransactionForm({
               aria-pressed={a.id === selectedAccount}
               onClick={() => setAccountId(a.id)}
               className={cn(
-                "flex h-10 items-center gap-1.5 rounded-xl border-2 bg-sf px-3 font-display text-[13px] leading-none font-extrabold text-ink",
-                a.id === selectedAccount ? "border-ink" : "border-bd",
+                "flex h-9 items-center gap-1.5 rounded-full px-3.5 text-[13px] leading-none font-medium transition-colors",
+                a.id === selectedAccount ? "bg-ink text-bg" : "bg-sf text-ink shadow-card",
               )}
             >
-              <span className="size-3.5 rounded-[5px]" style={{ background: accountColor(a) }} />
+              <span className="size-2.5 rounded-full" style={{ background: accountColor(a) }} />
               {a.name}
             </button>
           ))}
         </div>
 
         {!editing ? (
-          <div className="flex flex-col gap-3 rounded-2xl border-2 border-bd bg-sf px-3.5 py-3">
+          <div className="flex flex-col gap-3 rounded-2xl bg-sf px-4 py-3 shadow-card">
             <div className="flex items-center gap-2.5">
-              <Icon name="event_repeat" className="text-p" />
+              <Icon name="event_repeat" className="text-g" />
               <div className="flex-1">
-                <div className="font-display text-[15px] leading-[1.2] font-extrabold">Recorrente</div>
-                <div className="text-xs leading-[1.2] font-semibold text-mut">Eu lanço e te lembro sozinho</div>
+                <div className="font-display text-[15px] leading-[1.2] font-semibold">Recorrente</div>
+                <div className="text-xs leading-[1.2] text-mut">Repete todo período e aparece na agenda</div>
               </div>
               <Switch checked={recurring} onCheckedChange={setRecurring} aria-label="Recorrente" />
             </div>
@@ -366,10 +365,10 @@ export function NewTransactionForm({
                     ))}
                   </div>
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="flex h-12 items-center justify-between rounded-xl bg-sf2 pr-1.5 pl-3">
+                    <div className="flex h-12 items-center justify-between rounded-2xl bg-sf2 pr-1.5 pl-3">
                       <div>
-                        <div className="text-[11px] leading-none font-bold text-mut">{weekly ? "Vence toda" : "Vence dia"}</div>
-                        <div className="mt-[3px] font-display text-[17px] leading-none font-black">
+                        <div className="text-[11px] leading-none font-medium text-mut">{weekly ? "Vence toda" : "Vence dia"}</div>
+                        <div className="mt-[3px] font-display text-[17px] leading-none font-semibold">
                           {weekly ? WEEKDAYS[dueDay % 7] : dueDay}
                         </div>
                       </div>
@@ -378,7 +377,7 @@ export function NewTransactionForm({
                           type="button"
                           aria-label="Dia anterior"
                           onClick={() => setDueDay((d) => (weekly ? (d + 6) % 7 : d <= 1 ? 31 : d - 1))}
-                          className="size-[30px] rounded-[9px] bg-sf font-display text-base leading-none font-black text-ink"
+                          className="size-[30px] rounded-full bg-sf font-display text-base leading-none font-semibold text-ink"
                         >
                           −
                         </button>
@@ -386,20 +385,20 @@ export function NewTransactionForm({
                           type="button"
                           aria-label="Próximo dia"
                           onClick={() => setDueDay((d) => (weekly ? (d + 1) % 7 : (d % 31) + 1))}
-                          className="size-[30px] rounded-[9px] bg-sf font-display text-base leading-none font-black text-ink"
+                          className="size-[30px] rounded-full bg-sf font-display text-base leading-none font-semibold text-ink"
                         >
                           +
                         </button>
                       </div>
                     </div>
-                    <label className="flex h-12 flex-col justify-center rounded-xl bg-sf2 px-3">
-                      <span className="text-[11px] leading-none font-bold text-mut">Termina em (opcional)</span>
+                    <label className="flex h-12 flex-col justify-center rounded-2xl bg-sf2 px-3">
+                      <span className="text-[11px] leading-none font-medium text-mut">Termina em (opcional)</span>
                       <input
                         value={endDate}
                         onChange={(e) => setEndDate(maskDMY(e.target.value))}
                         placeholder="dd/mm/aaaa"
                         inputMode="numeric"
-                        className="mt-1 w-full bg-transparent font-display text-[15px] leading-none font-extrabold text-ink outline-none placeholder:text-mut"
+                        className="mt-1 w-full bg-transparent font-display text-[15px] leading-none font-semibold text-ink outline-none placeholder:text-mut"
                       />
                     </label>
                   </div>
@@ -414,7 +413,6 @@ export function NewTransactionForm({
       <div className={cn("shrink-0 px-4 pt-3 pb-4", desktop ? "bg-bg" : "bg-sf2")}>
         <Button size="lg" block className="gap-2.5" onClick={save} disabled={saving}>
           {editing ? "Salvar alterações" : "Salvar lançamento"}
-          {!editing ? <ButtonTag>+10 XP</ButtonTag> : null}
         </Button>
       </div>
     </>

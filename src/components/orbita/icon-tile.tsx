@@ -4,10 +4,10 @@ import { Icon } from "@/components/orbita/icon";
 import { cn } from "@/lib/utils";
 
 /**
- * Tile quadrado de ícone.
- * - solid: fundo na cor + ícone branco + `inset 0 -4px 0 rgba(0,0,0,.14)`.
- * - soft:  fundo tint (--gs, --bs…) + ícone na cor.
- * Tamanho padrão 44 (raio 14); ícone ≈ 55% do tile.
+ * Tile redondo de ícone.
+ * - solid: fundo na cor + ícone branco.
+ * - soft:  fundo tint (--gs, --bs… ou softOf(cor)) + ícone na cor.
+ * Tamanho padrão 44; ícone ≈ 50% do tile.
  */
 function IconTile({
   icon,
@@ -33,7 +33,7 @@ function IconTile({
   children?: React.ReactNode;
 }) {
   const solid = variant === "solid";
-  const r = radius ?? Math.round(size * 0.31);
+  const r = radius ?? size / 2;
   return (
     <div
       className={cn("relative flex shrink-0 items-center justify-center", className)}
@@ -42,10 +42,9 @@ function IconTile({
         height: size,
         borderRadius: r,
         background: solid ? color : (soft ?? "var(--sf2)"),
-        boxShadow: solid ? `inset 0 -${size >= 44 ? 4 : 3}px 0 rgba(0,0,0,.14)` : undefined,
       }}
     >
-      <Icon name={icon} size={iconSize ?? Math.round(size * 0.56)} style={{ color: solid ? "#fff" : color }} />
+      <Icon name={icon} size={iconSize ?? Math.round(size * 0.5)} style={{ color: solid ? "#fff" : color }} />
       {children}
     </div>
   );

@@ -1,10 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { unwrapReward } from "@/lib/api/client";
 import { meSchema, type Me, type Reward } from "@/lib/api/schemas";
 import { getQueryClient } from "@/lib/query-client";
-import { ACHIEVEMENT_DELAY, LEVEL_UP_DELAY, handleReward, meQueryKey } from "@/features/rewards/handle-reward";
-import { TOAST_DURATION, useAppStore } from "@/stores/app-store";
+import { handleReward, meQueryKey } from "@/features/rewards/handle-reward";
+import { useAppStore } from "@/stores/app-store";
 
 const baseMe: Me = {
   id: "u1",
@@ -32,79 +32,18 @@ function reward(over: Partial<Reward> = {}): Reward {
 
 describe("handleReward", () => {
   beforeEach(() => {
-    vi.useFakeTimers();
-    useAppStore.setState({ me: baseMe, toast: null, modal: null, modalQueue: [] });
-  });
-  afterEach(() => {
-    vi.useRealTimers();
+    useAppStore.setState({ me: baseMe });
   });
 
   it("ignora reward nulo", () => {
-    handleReward(null, "nada");
-    expect(useAppStore.getState().toast).toBeNull();
+    handleReward(null);
     expect(useAppStore.getState().me).toEqual(baseMe);
   });
 
-  it("substitui o me (store + cache) e mostra o toast de XP", () => {
-    handleReward(reward(), "Lançamento salvo: iFood");
-    const s = useAppStore.getState();
-    expect(s.me?.xp).toBe(1250);
-    expect(s.me?.coins).toBe(342);
+  it("só sincroniza o me (store + cache), sem XP na UI", () => {
+    handleReward(reward());
+    expect(useAppStore.getState().me?.coins).toBe(342);
     expect(getQueryClient().getQueryData(meQueryKey)).toMatchObject({ xp: 1250 });
-    expect(s.toast).toMatchObject({ xp: 10, coins: 2, message: "Lançamento salvo: iFood" });
-
-    vi.advanceTimersByTime(TOAST_DURATION);
-    expect(useAppStore.getState().toast).toBeNull();
-  });
-
-  it("abre o modal de nível 1,3s depois do toast", () => {
-    handleReward(reward({ xp: 300, leveledUp: true, me: { ...baseMe, level: 8, xp: 40 } }));
-    expect(useAppStore.getState().modal).toBeNull();
-    vi.advanceTimersByTime(LEVEL_UP_DELAY - 1);
-    expect(useAppStore.getState().modal).toBeNull();
-    vi.advanceTimersByTime(1);
-    expect(useAppStore.getState().modal).toEqual({ kind: "nivel", level: 8 });
-  });
-
-  it("enfileira conquistas depois do nível", () => {
-    const achievement = { key: "primeiro-passo", title: "Primeiro passo", description: "Configurou sua órbita", icon: "flag" };
-    handleReward(reward({ leveledUp: true, achievements: [achievement], me: { ...baseMe, level: 8 } }));
-    vi.advanceTimersByTime(LEVEL_UP_DELAY);
-    const s = useAppStore.getState();
-    expect(s.modal?.kind).toBe("nivel");
-    expect(s.modalQueue).toEqual([{ kind: "conquista", achievement }]);
-    s.closeModal();
-    expect(useAppStore.getState().modal).toEqual({ kind: "conquista", achievement });
-  });
-
-  it("conquista sem level-up abre após o delay curto", () => {
-    const achievement = { key: "cofrinho", title: "Cofrinho", description: "Guardou na 1ª meta", icon: "savings" };
-    handleReward(reward({ achievements: [achievement] }));
-    vi.advanceTimersByTime(ACHIEVEMENT_DELAY);
-    expect(useAppStore.getState().modal).toEqual({ kind: "conquista", achievement });
-  });
-
-  it("não mostra toast quando não houve XP nem moedas", () => {
-    handleReward(reward({ xp: 0, coins: 0 }));
-    expect(useAppStore.getState().toast).toBeNull();
-  });
-
-  it("não duplica a fila quando a mesma conquista é aberta manualmente (Perfil) e pelo reward", () => {
-    // Referências diferentes, mesma conquista: simula clicar na medalha recém-desbloqueada
-    // no Perfil (achievements.data) enquanto o timer automático do reward ainda não disparou.
-    const fromProfile = { key: "cofrinho", title: "Cofrinho", description: "Guardou na 1ª meta", icon: "savings" };
-    const fromReward = { key: "cofrinho", title: "Cofrinho", description: "Guardou na 1ª meta", icon: "savings" };
-
-    useAppStore.getState().openModal({ kind: "conquista", achievement: fromProfile });
-    handleReward(reward({ achievements: [fromReward] }));
-    vi.advanceTimersByTime(ACHIEVEMENT_DELAY);
-
-    const s = useAppStore.getState();
-    expect(s.modal).toEqual({ kind: "conquista", achievement: fromProfile });
-    expect(s.modalQueue).toEqual([]);
-
-    s.closeModal();
-    expect(useAppStore.getState().modal).toBeNull();
   });
 });
 

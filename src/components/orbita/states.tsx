@@ -4,17 +4,16 @@ import * as React from "react";
 
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Cobre, type CobreMood } from "@/components/orbita/cobre";
 import { Icon } from "@/components/orbita/icon";
 import { cn } from "@/lib/utils";
 
-/** Vazio: Cobre (dormindo/feliz) + título + texto + CTA verde. */
+/** Vazio: ícone num círculo suave + título + texto + CTA. */
 function EmptyState({
   title,
   text,
   ctaLabel,
   onCta,
-  mood = "dormindo",
+  icon = "inbox",
   compact,
   className,
 }: {
@@ -22,17 +21,19 @@ function EmptyState({
   text: string;
   ctaLabel?: string;
   onCta?: () => void;
-  mood?: CobreMood;
+  icon?: string;
   compact?: boolean;
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col items-center gap-2.5 px-3 py-[18px] text-center", className)}>
-      <Cobre mood={mood} size={compact ? 72 : 96} />
-      <div className="font-display text-lg leading-[1.25] font-black text-balance text-ink">{title}</div>
-      <div className="max-w-[300px] text-sm leading-[1.45] font-medium text-pretty text-mut">{text}</div>
+    <div className={cn("flex flex-col items-center gap-2 px-3 text-center", compact ? "py-3" : "py-6", className)}>
+      <div className={cn("flex items-center justify-center rounded-full bg-gs text-g", compact ? "size-12" : "size-16")}>
+        <Icon name={icon} size={compact ? 24 : 30} />
+      </div>
+      <div className="mt-1 text-base leading-[1.3] font-semibold text-balance text-ink">{title}</div>
+      <div className="max-w-[300px] text-sm leading-[1.45] text-pretty text-mut">{text}</div>
       {ctaLabel ? (
-        <Button size="sm" className="mt-1.5 h-[46px] px-5 text-sm font-extrabold" onClick={onCta}>
+        <Button size="sm" className="mt-2" onClick={onCta}>
           {ctaLabel}
         </Button>
       ) : null}
@@ -40,35 +41,35 @@ function EmptyState({
   );
 }
 
-/** Carregando: linhas skeleton (tile 44 + 2 linhas + valor) com shimmer 1,3s. */
+/** Carregando: linhas skeleton (tile + 2 linhas + valor). */
 function LoadingState({ rows = 3, className }: { rows?: number; className?: string }) {
   return (
     <div role="status" aria-label="Carregando" className={cn("flex flex-col gap-3.5 py-1", className)}>
       {Array.from({ length: rows }, (_, i) => (
         <div key={i} className="flex items-center gap-3">
-          <Skeleton className="size-11 shrink-0 rounded-[14px]" />
+          <Skeleton className="size-11 shrink-0 rounded-full" />
           <div className="flex flex-1 flex-col gap-2">
-            <Skeleton className="h-3 w-[62%] rounded-md" />
-            <Skeleton className="h-2.5 w-[36%] rounded-md" />
+            <Skeleton className="h-3 w-[62%] rounded-full" />
+            <Skeleton className="h-2.5 w-[36%] rounded-full" />
           </div>
-          <Skeleton className="h-3.5 w-16 rounded-md" />
+          <Skeleton className="h-3.5 w-16 rounded-full" />
         </div>
       ))}
     </div>
   );
 }
 
-/** Erro: fundo --rs, Cobre preocupado, "Tentar de novo" secundário vermelho. */
+/** Erro: aviso discreto + "Tentar de novo". */
 function ErrorState({ onRetry, compact, className }: { onRetry?: () => void; compact?: boolean; className?: string }) {
   return (
-    <div className={cn("flex flex-col items-center gap-2.5 rounded-[18px] bg-rs px-3 py-[18px] text-center", className)}>
-      <Cobre mood="preocupado" size={compact ? 72 : 96} />
-      <div className="font-display text-lg leading-[1.25] font-black text-ink">Ops, não consegui carregar</div>
-      <div className="max-w-[300px] text-sm leading-[1.45] font-medium text-mut">
-        A conexão tropeçou no caminho. Seus dados estão seguros — é só tentar de novo.
+    <div className={cn("flex flex-col items-center gap-2 rounded-2xl px-3 text-center", compact ? "py-3" : "py-6", className)}>
+      <div className="flex size-12 items-center justify-center rounded-full bg-rs text-r">
+        <Icon name="cloud_off" size={24} />
       </div>
-      <Button variant="secondary-danger" size="sm" className="mt-1.5 h-[46px] px-5 text-sm font-extrabold" onClick={onRetry}>
-        <Icon name="refresh" size={20} />
+      <div className="mt-1 text-base leading-[1.3] font-semibold text-ink">Não consegui carregar</div>
+      <div className="max-w-[300px] text-sm leading-[1.45] text-mut">Verifique a conexão e tente de novo. Seus dados estão seguros.</div>
+      <Button variant="secondary" size="sm" className="mt-2" onClick={onRetry}>
+        <Icon name="refresh" size={18} />
         Tentar de novo
       </Button>
     </div>

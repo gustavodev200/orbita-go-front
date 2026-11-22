@@ -7,17 +7,14 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import { CategoryToggleChip } from "@/components/orbita/category-chip";
 import { ChoiceChip } from "@/components/orbita/choice-chip";
-import { Cobre } from "@/components/orbita/cobre";
 import { Icon } from "@/components/orbita/icon";
 import { FieldLabel } from "@/components/orbita/panel";
-import { SpeechBubble } from "@/components/orbita/speech-bubble";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import type { Reward } from "@/lib/api/schemas";
 import { DEFAULT_DISABLED_KEYS } from "@/lib/categories";
 import { maskBRLInput, parseBRLToCents } from "@/lib/format";
-import { useIsDesktop } from "@/hooks/use-media-query";
 import { displayNameFromSession } from "@/features/auth/auth";
 import { useSession } from "@/features/auth/use-session";
 import { GoalIconPicker } from "@/features/finance/goals-tab";
@@ -36,11 +33,10 @@ function nameSuggestions(full: string | null): string[] {
   return [...new Set(out.filter((s) => s.length >= 2))];
 }
 
-/** Onboarding em 4 passos (nome, renda, categorias, meta) + tela final com +50 XP. */
+/** Onboarding em 4 passos (nome, renda, categorias, meta) + tela final. */
 export function OnboardingScreen() {
   const router = useRouter();
   const qc = useQueryClient();
-  const desktop = useIsDesktop();
   const { session } = useSession();
   const me = useMe(!!session);
   const categories = useCategories();
@@ -88,16 +84,16 @@ export function OnboardingScreen() {
 
   const done = step >= 4;
   const says = [
-    "Oi! Eu sou o Cobre, sua moedinha de estimação. Como quer ser chamado?",
-    `Prazer, ${shownName || "você"}! Quanto entra por mês, mais ou menos? Pode pular se preferir.`,
-    "Onde vai a maior parte da grana? Já marquei as mais comuns.",
-    "Agora a parte legal: qual é o seu primeiro sonho?",
+    { title: "Como quer ser chamado?", text: "Vamos deixar o app com a sua cara." },
+    { title: `Quanto entra por mês, ${shownName || "você"}?`, text: "Um valor aproximado ajuda nos orçamentos. Pode pular." },
+    { title: "Onde vai seu dinheiro?", text: "Escolha as categorias que você usa. Já marcamos as mais comuns." },
+    { title: "Tem alguma meta?", text: "Uma viagem, uma reserva, um objetivo. Pode pular e criar depois." },
   ];
 
   const next = () => {
     if (done) {
       router.replace("/");
-      handleReward(reward, `Bem-vindo(a) ao órbitaGO, ${shownName}!`);
+      handleReward(reward);
       return;
     }
     if (step === 0 && !shownName.trim()) return;
@@ -120,18 +116,16 @@ export function OnboardingScreen() {
         >
           <Icon name={step === 0 ? "close" : "arrow_back"} size={28} />
         </button>
-        <Progress value={(Math.min(step, 4) / 4) * 100} size="lg" className="flex-1" kind="bar" indicatorClassName="shadow-[inset_0_-4px_0_rgba(0,0,0,.12),inset_0_4px_0_rgba(255,255,255,.3)]" />
-        <div className="min-w-[34px] text-right font-display text-sm leading-none font-black text-mut">{done ? "" : `${step + 1}/4`}</div>
+        <Progress value={(Math.min(step, 4) / 4) * 100} size="xs" className="flex-1" />
+        <div className="min-w-[34px] text-right font-display text-sm leading-none font-semibold text-mut">{done ? "" : `${step + 1}/4`}</div>
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto px-5 pt-3 pb-5">
         <div className="mx-auto flex max-w-[620px] flex-col gap-[22px]">
           {!done ? (
-            <div className="flex items-end gap-3">
-              <Cobre mood={step === 1 ? "preocupado" : "feliz"} size={desktop ? 120 : 92} />
-              <SpeechBubble tail="left" raised className="mb-4 flex-1 px-4 py-3.5 font-display text-[17px] leading-[1.3] font-extrabold lg:text-xl">
-                {says[step]}
-              </SpeechBubble>
+            <div className="flex flex-col gap-2 pt-2">
+              <h1 className="m-0 text-[28px] leading-[1.15] font-semibold tracking-[-.02em] text-balance">{says[step].title}</h1>
+              <p className="m-0 text-[15px] leading-normal text-mut">{says[step].text}</p>
             </div>
           ) : null}
 
@@ -153,7 +147,7 @@ export function OnboardingScreen() {
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Seu nome ou apelido"
                     aria-label="Seu nome ou apelido"
-                    className="font-display text-xl font-extrabold"
+                    className="font-display text-xl font-semibold"
                   />
                   {suggestions.length ? (
                     <div className="flex flex-wrap gap-2">
@@ -169,15 +163,15 @@ export function OnboardingScreen() {
 
               {step === 1 ? (
                 <div className="flex flex-col gap-3">
-                  <div className="flex h-[72px] items-center gap-2 rounded-[18px] border-2 border-b-4 border-bd bg-sf px-5">
-                    <span className="num text-[26px] leading-none font-extrabold text-mut">R$</span>
+                  <div className="flex h-[72px] items-center gap-2 rounded-3xl bg-sf px-5 shadow-card">
+                    <span className="num text-[26px] leading-none font-semibold text-mut">R$</span>
                     <input
                       value={income}
                       onChange={(e) => setIncome(maskBRLInput(e.target.value))}
                       placeholder="0,00"
                       inputMode="numeric"
                       aria-label="Renda mensal"
-                      className="num min-w-0 flex-1 bg-transparent text-[34px] leading-none font-extrabold text-b outline-none placeholder:text-mut/60"
+                      className="num min-w-0 flex-1 bg-transparent text-[34px] leading-none font-semibold text-ink outline-none placeholder:text-mut/60"
                     />
                   </div>
                   <div className="flex flex-wrap gap-2">
@@ -222,18 +216,18 @@ export function OnboardingScreen() {
                     onChange={(e) => setGoal(e.target.value)}
                     placeholder="Nome da meta"
                     aria-label="Nome da meta"
-                    className="font-display text-lg font-extrabold"
+                    className="font-display text-lg font-semibold"
                   />
                   <Input
                     size="hero"
                     tone="raised"
                     inputMode="numeric"
-                    icon={<span className="num text-xl font-extrabold text-mut">R$</span>}
+                    icon={<span className="num text-xl font-semibold text-mut">R$</span>}
                     value={goalValue}
                     onChange={(e) => setGoalValue(maskBRLInput(e.target.value))}
                     placeholder="0,00"
                     aria-label="Valor da meta"
-                    className="num text-2xl font-extrabold text-g"
+                    className="num text-2xl font-semibold text-g"
                   />
                   <FieldLabel className="mt-1 mb-0">Ícone</FieldLabel>
                   <GoalIconPicker value={icon} onChange={setIcon} />
@@ -242,12 +236,12 @@ export function OnboardingScreen() {
                     size="hero"
                     tone="raised"
                     inputMode="numeric"
-                    icon={<span className="num text-xl font-extrabold text-mut">R$</span>}
+                    icon={<span className="num text-xl font-semibold text-mut">R$</span>}
                     value={goalSaved}
                     onChange={(e) => setGoalSaved(maskBRLInput(e.target.value))}
                     placeholder="0,00"
                     aria-label="Valor já guardado"
-                    className="num text-2xl font-extrabold"
+                    className="num text-2xl font-semibold"
                   />
                   {parseBRLToCents(goalSaved) > parseBRLToCents(goalValue) ? (
                     <div className="text-[13px] leading-[1.3] font-semibold text-r">Não pode passar do valor da meta.</div>
@@ -256,23 +250,13 @@ export function OnboardingScreen() {
               ) : null}
 
               {done ? (
-                <div className="flex flex-col items-center gap-3.5 pt-2.5 text-center">
-                  <Cobre mood="comemorando" size={170} />
-                  <div className="font-display text-[40px] leading-[1.05] font-black text-g">Você ganhou {reward?.xp ?? 50} XP!</div>
-                  <div className="max-w-[380px] text-base leading-[1.45] font-semibold text-mut">
-                    Tudo pronto, {shownName || "você"}. Sua órbita começou a girar.
+                <div className="flex flex-col items-center gap-3 pt-16 text-center">
+                  <div className="flex size-20 items-center justify-center rounded-full bg-g text-white">
+                    <Icon name="check" size={40} />
                   </div>
-                  <div className="flex items-center gap-3.5 rounded-[20px] border-2 border-b-[5px] border-[color:var(--y)] bg-ys px-[18px] py-3.5 text-left">
-                    <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-[#FF8A1E] shadow-[inset_0_-5px_0_#D96A00]">
-                      <Icon name={reward?.achievements[0]?.icon ?? "flag"} size={30} className="text-white" />
-                    </div>
-                    <div>
-                      <div className="font-display text-[11px] leading-none font-black tracking-[.12em] text-yd uppercase">Primeira conquista</div>
-                      <div className="mt-1 font-display text-lg leading-[1.2] font-black">{reward?.achievements[0]?.title ?? "Primeiro passo"}</div>
-                      <div className="text-[13px] leading-[1.3] font-semibold text-mut">
-                        {reward?.achievements[0]?.description ?? "Configurou sua órbita"}
-                      </div>
-                    </div>
+                  <div className="mt-2 text-[32px] leading-[1.1] font-semibold tracking-[-.02em]">Tudo pronto, {shownName || "você"}!</div>
+                  <div className="max-w-[360px] text-base leading-[1.45] text-mut">
+                    Use o botão + para lançar gastos, criar tarefas e lembretes. Ative as notificações na Agenda para não esquecer nada.
                   </div>
                 </div>
               ) : null}
@@ -281,7 +265,7 @@ export function OnboardingScreen() {
         </div>
       </div>
 
-      <div className="shrink-0 border-t-2 border-bd px-5 pt-4 pb-5">
+      <div className="shrink-0 px-5 pt-4 pb-[calc(1.25rem+env(safe-area-inset-bottom))]">
         <div className="mx-auto flex max-w-[620px] gap-2.5">
           {step === 1 ? (
             <Button

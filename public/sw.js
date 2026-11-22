@@ -25,8 +25,15 @@ self.addEventListener("push", (event) => {
     body: payload.body || "",
     icon: payload.icon || "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
+    vibrate: [80, 40, 80],
     data: { url: payload.url || "/" },
   };
+  // Mesma tag substitui a notificação anterior (ex.: lembrete repetido) e
+  // `renotify` faz o aparelho avisar de novo em vez de trocar em silêncio.
+  if (payload.tag) {
+    options.tag = payload.tag;
+    options.renotify = true;
+  }
 
   event.waitUntil(self.registration.showNotification(title, options));
 });

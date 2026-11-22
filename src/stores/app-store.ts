@@ -1,19 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import type { AchievementBrief, Me, ThemePref, Transaction } from "@/lib/api/schemas";
-
-export type CelebrationKind = "nivel" | "conquista" | "ofensiva" | "escudo" | "meta";
-
-export type ModalState = {
-  kind: CelebrationKind;
-  level?: number;
-  achievement?: AchievementBrief;
-  goal?: { name: string; targetCents: number; steps: number };
-  streak?: number;
-};
-
-export type XpToastState = { id: number; xp: number; coins: number; message?: string };
+import type { Me, Task, ThemePref, Transaction } from "@/lib/api/schemas";
 
 export type TxSheetState = {
   open: boolean;
@@ -23,12 +11,11 @@ export type TxSheetState = {
   recurring?: boolean;
 };
 
-export const TOAST_DURATION = 2400;
-
-/** Mesmo evento de celebração (kind + identificador): achievement.key pra conquista, level pra nível. */
-function sameCelebration(a: ModalState, b: ModalState): boolean {
-  return a.kind === b.kind && a.achievement?.key === b.achievement?.key && a.level === b.level;
-}
+/** Diálogos globais de criação rápida (botão + e toque num dia da agenda). */
+export type QuickAddState =
+  | { kind: null }
+  | { kind: "task"; date?: string | null; editing?: Task }
+  | { kind: "reminder"; date?: string };
 
 type AppState = {
   me: Me | null;
@@ -40,27 +27,18 @@ type AppState = {
   sidebarCollapsed: boolean;
   toggleSidebar: () => void;
 
-  toast: XpToastState | null;
-  showToast: (t: Omit<XpToastState, "id">) => void;
-  clearToast: () => void;
-
-  modal: ModalState | null;
-  modalQueue: ModalState[];
-  openModal: (m: ModalState) => void;
-  /** Troca o modal atual sem passar pela fila (ex.: ofensiva → escudo). */
-  replaceModal: (m: ModalState) => void;
-  closeModal: () => void;
-
   txSheet: TxSheetState;
   openTxSheet: (opts?: Omit<TxSheetState, "open">) => void;
   closeTxSheet: () => void;
-};
 
-let toastTimer: ReturnType<typeof setTimeout> | undefined;
+  quickAdd: QuickAddState;
+  openQuickAdd: (state: Exclude<QuickAddState, { kind: null }>) => void;
+  closeQuickAdd: () => void;
+};
 
 export const useAppStore = create<AppState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       me: null,
       setMe: (me) => set({ me }),
 
@@ -70,40 +48,13 @@ export const useAppStore = create<AppState>()(
       sidebarCollapsed: false,
       toggleSidebar: () => set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
 
-      toast: null,
-      showToast: (t) => {
-        clearTimeout(toastTimer);
-        set({ toast: { ...t, id: Date.now() + Math.random() } });
-        toastTimer = setTimeout(() => set({ toast: null }), TOAST_DURATION);
-      },
-      clearToast: () => {
-        clearTimeout(toastTimer);
-        set({ toast: null });
-      },
-
-      modal: null,
-      modalQueue: [],
-      openModal: (m) => {
-        const { modal, modalQueue } = get();
-        // Mesma conquista/nível pode chegar 2x (aberta na mão no Perfil + fila do reward
-        // pro mesmo evento) — ignora duplicata pra não reabrir sozinha ao fechar a 1ª.
-        if (modal && sameCelebration(modal, m)) return;
-        if (modal) {
-          if (modalQueue.some((q) => sameCelebration(q, m))) return;
-          set({ modalQueue: [...modalQueue, m] });
-        } else {
-          set({ modal: m });
-        }
-      },
-      replaceModal: (m) => set({ modal: m }),
-      closeModal: () => {
-        const [next, ...rest] = get().modalQueue;
-        set({ modal: next ?? null, modalQueue: rest });
-      },
-
       txSheet: { open: false },
       openTxSheet: (opts) => set({ txSheet: { open: true, ...opts } }),
       closeTxSheet: () => set({ txSheet: { open: false } }),
+
+      quickAdd: { kind: null },
+      openQuickAdd: (quickAdd) => set({ quickAdd }),
+      closeQuickAdd: () => set({ quickAdd: { kind: null } }),
     }),
     {
       name: "orbita:ui",

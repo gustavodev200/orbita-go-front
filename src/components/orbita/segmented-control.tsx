@@ -15,9 +15,9 @@ export type SegmentOption<T extends string> = {
 };
 
 /**
- * Controle segmentado 3D.
- * - card:  ativo vira card (--sf, borda --bd base 4px, texto --g) — como as Tabs.
- * - solid: ativo ganha cor sólida + sombra 4px (Saída vermelho / Entrada azul).
+ * Controle segmentado em pílula.
+ * - card:  ativo vira pílula branca com sombra leve.
+ * - solid: ativo ganha a cor da opção (Saída vermelho / Entrada verde).
  */
 function SegmentedControl<T extends string>({
   value,
@@ -40,7 +40,7 @@ function SegmentedControl<T extends string>({
     <div
       role="radiogroup"
       aria-label={ariaLabel}
-      className={cn("grid gap-1.5 rounded-[18px] bg-sf2 p-1.5", className)}
+      className={cn("grid gap-1 rounded-full bg-sf2 p-1", className)}
       style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
     >
       {options.map((o) => {
@@ -50,7 +50,6 @@ function SegmentedControl<T extends string>({
             ? {
                 background: active ? o.color : "transparent",
                 color: active ? "#fff" : "var(--mut)",
-                boxShadow: `0 4px 0 ${active ? (o.shadow ?? "transparent") : "transparent"}`,
               }
             : undefined;
         return (
@@ -62,13 +61,13 @@ function SegmentedControl<T extends string>({
             onClick={() => onChange(o.value)}
             style={solidStyle}
             className={cn(
-              "flex items-center justify-center gap-1.5 font-display leading-none font-black transition-colors",
+              "flex items-center justify-center gap-1.5 leading-none font-medium transition-colors",
               variant === "card" &&
                 cn(
-                  "h-[42px] rounded-[13px] border-2 text-sm",
-                  active ? "border-bd border-b-4 bg-sf text-g" : "border-transparent text-mut",
+                  "h-10 rounded-full text-sm",
+                  active ? "bg-sf text-ink shadow-card" : "text-mut",
                 ),
-              variant === "solid" && "h-12 rounded-[13px] text-base tracking-[.04em] uppercase",
+              variant === "solid" && "h-11 rounded-full text-[15px]",
               itemClassName,
             )}
           >

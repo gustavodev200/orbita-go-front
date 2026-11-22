@@ -27,11 +27,12 @@ test.describe("Finanças", () => {
     await expect(page.getByText("Aluguel")).toBeVisible();
 
     await page.getByRole("tab", { name: /orçamento/i }).click();
-    await expect(page.getByText("Vida das categorias")).toBeVisible();
+    await expect(page.getByText("Orçamento do mês")).toBeVisible();
     await expect(page.getByText("Alimentação")).toBeVisible();
 
     await page.getByRole("tab", { name: /metas/i }).click();
     await expect(page.getByRole("button", { name: "Viagem" })).toBeVisible();
+    await expect(page.getByText("Guardar dinheiro")).toBeVisible();
   });
 
   test("Novo lançamento: valor pelo teclado, categoria, conta e salvar envia o POST certo", async ({
@@ -39,7 +40,8 @@ test.describe("Finanças", () => {
     apiCalls,
   }) => {
     await page.goto("/financas");
-    await page.getByRole("button", { name: /novo lançamento|adicionar lançamento/i }).first().click();
+    await page.getByRole("button", { name: "Adicionar", exact: true }).filter({ visible: true }).first().click();
+    await page.getByRole("menuitem", { name: /lançamento/i }).click();
 
     const sheet = page.getByRole("dialog");
     await expect(sheet).toBeVisible();

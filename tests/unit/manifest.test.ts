@@ -9,8 +9,8 @@ describe("manifest", () => {
     expect(m.short_name).toBe("órbitaGO");
     expect(m.start_url).toBe("/");
     expect(m.display).toBe("standalone");
-    expect(m.theme_color).toBe("#20B878");
-    expect(m.background_color).toBe("#FBF6EE");
+    expect(m.theme_color).toBe("#F4F4F6");
+    expect(m.background_color).toBe("#F4F4F6");
   });
 
   it("inclui os 3 ícones (192, 512 e o 512 maskable)", () => {

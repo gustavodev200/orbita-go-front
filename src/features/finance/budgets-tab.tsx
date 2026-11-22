@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 
-import { HpBar, hpTone } from "@/components/orbita/bars";
-import { Cobre } from "@/components/orbita/cobre";
 import { Icon } from "@/components/orbita/icon";
 import { IconTile } from "@/components/orbita/icon-tile";
 import { PanelBody, PanelFooter, PanelHeader } from "@/components/orbita/panel";
@@ -12,8 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import type { Budget } from "@/lib/api/schemas";
 import { findCategory } from "@/lib/categories";
+import { softOf } from "@/lib/colors";
 import { currentMonth, monthProgressPct } from "@/lib/dates";
 import { formatBRL, maskBRLInput, parseBRLToCents } from "@/lib/format";
 import { useCategories } from "@/features/me/hooks";
@@ -23,21 +23,27 @@ import { useAppStore } from "@/stores/app-store";
 function BudgetCard({ b }: { b: Budget }) {
   const categories = useCategories();
   const cat = findCategory(categories, b.categoryKey);
-  const hp = b.limitCents > 0 ? Math.max(0, Math.round((1 - b.spentCents / b.limitCents) * 100)) : 0;
-  const tone = hpTone(hp);
+  const used = b.limitCents > 0 ? Math.round((b.spentCents / b.limitCents) * 100) : 0;
+  const tone = used >= 100 ? "r" : used >= 80 ? "y" : "ok";
+  const left = b.limitCents - b.spentCents;
   return (
-    <Card radius="lg" padding="none" tone={tone.low ? "danger" : "default"} className="flex flex-col gap-3.5 p-[18px]">
+    <Card padding="none" className="flex flex-col gap-3.5 p-5">
       <div className="flex items-center gap-3">
-        <IconTile icon={cat.icon} color={cat.color} size={48} radius={15} iconSize={26} />
+        <IconTile icon={cat.icon} color={cat.color} soft={softOf(cat.color)} variant="soft" size={44} />
         <div className="min-w-0 flex-1">
-          <div className="font-display text-[17px] leading-[1.2] font-black">{cat.name}</div>
-          <div className="num mt-0.5 text-[13px] leading-[1.3] font-semibold text-mut">
+          <div className="text-[15px] leading-[1.2] font-semibold">{cat.name}</div>
+          <div className="num mt-1 text-[13px] leading-none text-mut">
             {formatBRL(b.spentCents)} de {formatBRL(b.limitCents)}
           </div>
         </div>
-        {tone.low ? <Cobre mood="preocupado" size={46} /> : null}
+        <span className="num text-sm font-medium" style={{ color: `var(--${tone === "ok" ? "okd" : tone === "y" ? "yd" : "rd"})` }}>
+          {used}%
+        </span>
       </div>
-      <HpBar value={hp} trailing={`resta ${formatBRL(Math.max(0, b.limitCents - b.spentCents))}`} />
+      <Progress value={used} tone={tone} size="sm" aria-label={`${used}% do limite usado`} />
+      <div className="text-xs leading-none text-mut">
+        {left >= 0 ? `Restam ${formatBRL(left)}` : `Passou ${formatBRL(-left)} do limite`}
+      </div>
     </Card>
   );
 }
@@ -57,21 +63,21 @@ function AdjustLimitsDialog({ open, onOpenChange, budgets }: { open: boolean; on
       <PanelHeader title="Ajustar limites" onClose={() => onOpenChange(false)} />
       <PanelBody>
         <p className="m-0 text-[13px] leading-[1.4] font-semibold text-mut">
-          Dê uma barra de vida para cada categoria. Deixe em branco para ficar sem limite.
+          Defina quanto quer gastar por categoria no mês. Deixe em branco para ficar sem limite.
         </p>
         {expense.map((c) => (
           <div key={c.key} className="flex items-center gap-3">
-            <IconTile icon={c.icon} color={c.color} size={40} radius={13} iconSize={22} />
-            <div className="flex-1 font-display text-[15px] font-extrabold">{c.name}</div>
+            <IconTile icon={c.icon} color={c.color} soft={softOf(c.color)} variant="soft" size={40} />
+            <div className="flex-1 font-display text-[15px] font-semibold">{c.name}</div>
             <Input
               containerClassName="w-40"
               inputMode="numeric"
               aria-label={`Limite de ${c.name}`}
               placeholder="0,00"
-              icon={<span className="num text-sm font-extrabold text-mut">R$</span>}
+              icon={<span className="num text-sm font-semibold text-mut">R$</span>}
               value={values[c.key] ?? ""}
               onChange={(e) => setValues((v) => ({ ...v, [c.key]: maskBRLInput(e.target.value) }))}
-              className="num text-right font-extrabold"
+              className="num text-right font-semibold"
             />
           </div>
         ))}
@@ -96,7 +102,7 @@ function AdjustLimitsDialog({ open, onOpenChange, budgets }: { open: boolean; on
   );
 }
 
-/** Orçamento: HP = % do limite que resta (>50 verde, >20 amarelo, ≤20 vermelho). */
+/** Orçamento: % do limite usado (verde < 80%, amarelo até 100%, vermelho acima). */
 export function BudgetsTab() {
   const month = currentMonth();
   const budgets = useBudgets(month);
@@ -107,12 +113,12 @@ export function BudgetsTab() {
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <div className="font-display text-xl leading-[1.2] font-black">Vida das categorias</div>
+          <div className="text-lg leading-[1.2] font-semibold">Orçamento do mês</div>
           <div className="mt-0.5 text-[13px] leading-[1.4] font-semibold text-mut">
-            O mês está {monthProgressPct(month)}% andado. A barra é o que ainda resta de cada limite.
+            O mês está {monthProgressPct(month)}% andado.
           </div>
         </div>
-        <Button variant="secondary" className="h-11 rounded-[14px] px-4 text-sm text-b" onClick={() => setAdjusting(true)}>
+        <Button variant="secondary" size="sm" onClick={() => setAdjusting(true)}>
           <Icon name="tune" size={20} />
           Ajustar limites
         </Button>
@@ -128,9 +134,9 @@ export function BudgetsTab() {
         )}
         empty={
           <EmptyState
-            mood="feliz"
+            icon="donut_large"
             title="Sem limites definidos"
-            text="Dê uma barra de vida para cada categoria e veja quem aguenta até o fim do mês."
+            text="Defina um limite por categoria e acompanhe quanto já gastou no mês."
             ctaLabel="Definir limites"
             onCta={() => setAdjusting(true)}
           />

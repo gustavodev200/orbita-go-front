@@ -30,7 +30,7 @@ function Avatar({
     >
       {src ? <AvatarPrimitive.Image src={src} alt={name ?? ""} className="size-full object-cover" /> : null}
       <AvatarPrimitive.Fallback
-        className="flex size-full items-center justify-center font-display leading-none font-black"
+        className="flex size-full items-center justify-center font-display leading-none font-semibold"
         style={{ fontSize: Math.round(size * 0.375) }}
       >
         {initials || "?"}

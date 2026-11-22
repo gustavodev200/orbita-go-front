@@ -177,6 +177,7 @@ export async function mockApi(page: Page, apiUrl: string): Promise<RecordedCall[
     if (pathname === "/stats/compare" && method === "GET") return json(route, COMPARE);
 
     if (pathname === "/push/subscribe" && (method === "POST" || method === "DELETE")) return json(route, { ok: true });
+    if (pathname === "/push/test" && method === "POST") return json(route, { delivered: 1 });
 
     // Qualquer coisa não coberta: 404 explícito (melhor que deixar a
     // requisição vazar pra rede de verdade e travar o teste).

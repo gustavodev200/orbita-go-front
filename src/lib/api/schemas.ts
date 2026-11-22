@@ -181,64 +181,10 @@ export type ReminderDraft = z.infer<typeof reminderDraftSchema>;
 export const reminderSchema = reminderDraftSchema.extend({
   id: z.string(),
   enabled: z.boolean(),
+  /** Presente quando o lembrete é o espelho de `Task.reminderAt` (gerado pelo back). */
+  taskId: z.string().nullish(),
 });
 export type Reminder = z.infer<typeof reminderSchema>;
-
-export const missionSchema = z.object({
-  key: z.string(),
-  title: z.string(),
-  icon: z.string(),
-  progress: z.number(),
-  target: z.number(),
-  xp: z.number(),
-  coins: z.number(),
-  claimed: z.boolean(),
-  /** Opcional (API_CONTRACT "Pedidos do front"): sem o back mandar, deduzimos por `target >= 1000`. */
-  unit: z.enum(["count", "cents"]).nullish(),
-});
-export type Mission = z.infer<typeof missionSchema>;
-
-export const streakSchema = z.object({
-  streak: z.number(),
-  record: z.number(),
-  shields: z.number(),
-  days: z.array(z.object({ date: z.string(), done: z.boolean() })).default([]),
-  closedToday: z.boolean(),
-  /** Tamanho da ofensiva que acabou de zerar (0 = nada perdido). */
-  lostStreak: z.number().default(0),
-});
-export type Streak = z.infer<typeof streakSchema>;
-
-export const bossSchema = z.object({
-  name: z.string(),
-  icon: z.string(),
-  maxHpCents: z.number(),
-  hpCents: z.number(),
-  defeated: z.boolean(),
-  month: z.string(),
-  dueDate: z.string().nullable().default(null),
-});
-export type Boss = z.infer<typeof bossSchema>;
-
-export const achievementSchema = z.object({
-  key: z.string(),
-  title: z.string(),
-  description: z.string(),
-  icon: z.string(),
-  hint: z.string().nullish(),
-  unlocked: z.boolean(),
-  unlockedAt: z.string().nullish(),
-});
-export type Achievement = z.infer<typeof achievementSchema>;
-
-export const shopItemSchema = z.object({
-  key: z.string(),
-  name: z.string(),
-  icon: z.string(),
-  price: z.number(),
-  owned: z.boolean(),
-});
-export type ShopItem = z.infer<typeof shopItemSchema>;
 
 const monthStatSchema = z.object({
   month: z.string(),

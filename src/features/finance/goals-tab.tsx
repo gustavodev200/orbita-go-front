@@ -18,8 +18,7 @@ import { deadlineToISODay, formatDeadline, todayISO } from "@/lib/dates";
 import { formatBRL, maskBRLInput, parseBRLToCents } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useCreateGoal, useDepositGoal, useGoals, useUpdateGoal } from "@/features/finance/hooks";
-import { installmentByDeadline } from "./goal-trail-math";
-import { GoalTrail } from "./goal-trail";
+import { installmentByDeadline, suggestedStepAmountOf } from "./goal-trail-math";
 
 export const GOAL_ICONS = ["landscape", "shield", "laptop_mac", "directions_car", "home", "school"];
 const ICON_COLORS: Record<string, string> = {
@@ -33,9 +32,9 @@ const ICON_COLORS: Record<string, string> = {
 export const goalColor = (icon: string) => ICON_COLORS[icon] ?? "#20B878";
 
 function goalSubtitle(g: Goal): string {
-  if (g.completed) return "concluída!";
-  if (g.deadline) return `até ${formatDeadline(g.deadline)}`;
-  return `passo ${Math.min(g.currentStep + 1, g.steps)} de ${g.steps}`;
+  if (g.completed) return "Concluída";
+  if (g.deadline) return `Até ${formatDeadline(g.deadline)}`;
+  return "Sem prazo";
 }
 
 /** Grade 6 col de ícones da meta (onboarding e nova meta). */
@@ -52,8 +51,8 @@ export function GoalIconPicker({ value, onChange }: { value: string; onChange: (
             aria-label={i}
             onClick={() => onChange(i)}
             className={cn(
-              "flex aspect-square items-center justify-center rounded-2xl border-2 border-b-[5px]",
-              on ? "border-g bg-gs text-g" : "border-bd bg-sf text-mut",
+              "flex aspect-square items-center justify-center rounded-full transition-colors",
+              on ? "bg-g text-white" : "bg-sf2 text-mut hover:text-ink",
             )}
           >
             <Icon name={i} size={28} />
@@ -142,17 +141,17 @@ function GoalFields({
         value={state.name}
         onChange={(e) => onChange({ name: e.target.value })}
         placeholder="Nome da meta"
-        className="font-display text-lg font-extrabold"
+        className="font-display text-lg font-semibold"
       />
       <Input
         size="hero"
         tone="raised"
         inputMode="numeric"
-        icon={<span className="num text-xl font-extrabold text-mut">R$</span>}
+        icon={<span className="num text-xl font-semibold text-mut">R$</span>}
         value={state.value}
         onChange={(e) => onChange({ value: maskBRLInput(e.target.value) })}
         placeholder="0,00"
-        className="num text-2xl font-extrabold text-g"
+        className="num text-2xl font-semibold text-g"
       />
       <div>
         <FieldLabel>Ícone</FieldLabel>
@@ -166,7 +165,7 @@ function GoalFields({
           value={state.deadline}
           onChange={(e) => onChange({ deadline: e.target.value })}
           aria-label="Prazo da meta"
-          className="font-display text-[15px] font-extrabold"
+          className="font-display text-[15px] font-semibold"
         />
       </div>
       {state.deadline ? (
@@ -180,8 +179,8 @@ function GoalFields({
           />
           <div className="mt-2 text-[13px] leading-[1.4] font-semibold text-mut">
             {state.frequency
-              ? `A trilha vai mostrar 1 marco pra cada aporte, com a data, até ${formatDeadline(state.deadline)}.`
-              : "Escolha uma cadência pra trilha mostrar a data de cada aporte. Sem escolher, a trilha continua dividida em 10 partes iguais."}
+              ? `Você vai guardar uma parcela a cada período até ${formatDeadline(state.deadline)}.`
+              : "Escolha uma cadência para planejar os aportes até o prazo."}
           </div>
         </div>
       ) : null}
@@ -198,18 +197,18 @@ function GoalFields({
             size="hero"
             tone="raised"
             inputMode="numeric"
-            icon={<span className="num text-lg font-extrabold text-mut">R$</span>}
+            icon={<span className="num text-lg font-semibold text-mut">R$</span>}
             value={state.installmentValue}
             onChange={(e) => onChange({ installmentValue: maskBRLInput(e.target.value) })}
             placeholder="0,00"
             aria-label="Valor da parcela"
-            className="num mt-2 text-xl font-extrabold"
+            className="num mt-2 text-xl font-semibold"
           />
         ) : (
           <div className="mt-2 text-[13px] leading-[1.4] font-semibold text-mut">
             {generated != null
               ? `Sugestão: ${formatBRL(generated, { compact: true })} por mês até ${formatDeadline(state.deadline)}.`
-              : "A trilha calcula o valor sugerido pra você (meta dividida em 10 passos)."}
+              : "Sugerimos um valor por vez (a meta dividida em 10 partes)."}
           </div>
         )}
       </div>
@@ -240,12 +239,12 @@ function NewGoalDialog({ open, onOpenChange, onCreated }: { open: boolean; onOpe
             size="hero"
             tone="raised"
             inputMode="numeric"
-            icon={<span className="num text-xl font-extrabold text-mut">R$</span>}
+            icon={<span className="num text-xl font-semibold text-mut">R$</span>}
             value={savedValue}
             onChange={(e) => setSavedValue(maskBRLInput(e.target.value))}
             placeholder="0,00"
             aria-label="Valor já guardado"
-            className="num text-2xl font-extrabold"
+            className="num text-2xl font-semibold"
           />
           {savedInvalid ? <div className="mt-1.5 text-[13px] leading-[1.3] font-semibold text-r">Não pode passar do valor da meta.</div> : null}
         </div>
@@ -315,10 +314,67 @@ function EditGoalDialog({ goal, open, onOpenChange, onSaved }: { goal: Goal; ope
   );
 }
 
-/** Metas: chips + resumo (sticky no desktop) + trilha em zig-zag. */
+/** Guardar dinheiro: valor sugerido + atalhos + campo livre. */
+function DepositCard({ goal }: { goal: Goal }) {
+  const suggested = suggestedStepAmountOf(goal, Math.min(goal.currentStep, Math.max(0, goal.steps - 1)), todayISO());
+  const remaining = Math.max(0, goal.targetCents - goal.savedCents);
+  const [value, setValue] = useState(() => centsToInputValue(Math.min(suggested, remaining)));
+  const deposit = useDepositGoal(() => setValue(""));
+  const cents = parseBRLToCents(value);
+  const chips = [...new Set([Math.min(suggested, remaining), 5000, 10000, remaining])].filter((c) => c > 0 && c <= remaining);
+
+  if (goal.completed) {
+    return (
+      <Card className="flex flex-col items-center gap-2 text-center">
+        <div className="flex size-14 items-center justify-center rounded-full bg-oks text-ok">
+          <Icon name="check" size={28} />
+        </div>
+        <div className="text-lg font-semibold">Meta concluída</div>
+        <div className="text-sm text-mut">Você juntou {formatBRL(goal.targetCents)}.</div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="flex flex-col gap-4">
+      <div>
+        <div className="text-[17px] leading-none font-semibold">Guardar dinheiro</div>
+        <div className="mt-1.5 text-[13px] text-mut">Sugestão: {formatBRL(suggested, { compact: true })} por vez</div>
+      </div>
+      <Input
+        size="hero"
+        tone="raised"
+        inputMode="numeric"
+        icon={<span className="num text-lg font-medium text-mut">R$</span>}
+        value={value}
+        onChange={(e) => setValue(maskBRLInput(e.target.value))}
+        placeholder="0,00"
+        aria-label="Valor a guardar"
+        className="num text-2xl font-semibold"
+      />
+      <div className="flex flex-wrap gap-1.5">
+        {chips.map((c) => (
+          <ChoiceChip key={c} size="xs" selected={cents === c} onClick={() => setValue(centsToInputValue(c))}>
+            {c === remaining ? "Tudo que falta" : formatBRL(c, { compact: true })}
+          </ChoiceChip>
+        ))}
+      </div>
+      <Button
+        size="lg"
+        block
+        disabled={cents <= 0 || cents > remaining || deposit.isPending}
+        onClick={() => deposit.mutate({ goal, amountCents: cents })}
+      >
+        Guardar {cents > 0 ? formatBRL(cents, { compact: true }) : ""}
+      </Button>
+      {cents > remaining ? <div className="-mt-2 text-[13px] text-r">Passa do que falta para a meta.</div> : null}
+    </Card>
+  );
+}
+
+/** Metas: chips + resumo + guardar dinheiro. */
 export function GoalsTab({ startCreating }: { startCreating?: boolean }) {
   const goals = useGoals();
-  const deposit = useDepositGoal();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [creating, setCreating] = useState(!!startCreating);
   const [editing, setEditing] = useState(false);
@@ -337,8 +393,8 @@ export function GoalsTab({ startCreating }: { startCreating?: boolean }) {
               aria-pressed={on}
               onClick={() => setSelectedId(x.id)}
               className={cn(
-                "flex h-11 shrink-0 items-center gap-2 rounded-[14px] border-2 border-b-4 px-3.5 font-display text-sm leading-none font-extrabold text-ink",
-                on ? "border-bd bg-sf" : "border-transparent bg-sf2",
+                "flex h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm leading-none font-medium transition-colors",
+                on ? "bg-ink text-bg" : "bg-sf text-ink shadow-card hover:bg-sf2",
               )}
             >
               <Icon name={x.icon} size={20} style={{ color: goalColor(x.icon) }} />
@@ -346,7 +402,7 @@ export function GoalsTab({ startCreating }: { startCreating?: boolean }) {
             </button>
           );
         })}
-        <ChoiceChip variant="dashed" className="h-11 rounded-[14px] px-3.5" onClick={() => setCreating(true)}>
+        <ChoiceChip variant="dashed" className="h-10 px-4" onClick={() => setCreating(true)}>
           <Icon name="add" size={20} />
           Nova meta
         </ChoiceChip>
@@ -362,22 +418,22 @@ export function GoalsTab({ startCreating }: { startCreating?: boolean }) {
         )}
         empty={
           <EmptyState
-            mood="comemorando"
-            title="Qual é o seu sonho?"
-            text="Crie uma meta e eu desenho a trilha até ela, com baús de recompensa no caminho."
+            icon="savings"
+            title="Crie sua primeira meta"
+            text="Viagem, reserva, um notebook novo… defina o valor e acompanhe quanto já guardou."
             ctaLabel="Criar meta"
             onCta={() => setCreating(true)}
           />
         }
       >
         {g ? (
-          <div className="grid grid-cols-1 items-start gap-[18px] lg:grid-cols-[minmax(0,1fr)_minmax(0,1.3fr)]">
-            <Card radius="lg" className="flex flex-col gap-3 lg:sticky lg:top-[96px]">
+          <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2">
+            <Card className="flex flex-col gap-3">
               <div className="flex items-center gap-3">
-                <IconTile icon={g.icon} color={goalColor(g.icon)} size={52} radius={16} iconSize={30} />
+                <IconTile icon={g.icon} color={goalColor(g.icon)} size={48} />
                 <div className="flex-1">
-                  <div className="font-display text-xl leading-[1.15] font-black">{g.name}</div>
-                  <div className="text-[13px] leading-[1.3] font-semibold text-mut">{goalSubtitle(g)}</div>
+                  <div className="text-lg leading-[1.2] font-semibold">{g.name}</div>
+                  <div className="mt-0.5 text-[13px] leading-[1.3] text-mut">{goalSubtitle(g)}</div>
                 </div>
                 <button
                   type="button"
@@ -389,16 +445,16 @@ export function GoalsTab({ startCreating }: { startCreating?: boolean }) {
                 </button>
               </div>
               <div className="flex items-baseline gap-2">
-                <div className="num text-[32px] leading-none font-extrabold tracking-[-.02em]">{formatBRL(g.savedCents)}</div>
-                <div className="text-sm leading-none font-bold text-mut">de {formatBRL(g.targetCents)}</div>
+                <div className="num text-[32px] leading-none font-semibold tracking-[-.02em]">{formatBRL(g.savedCents)}</div>
+                <div className="text-sm leading-none font-medium text-mut">de {formatBRL(g.targetCents)}</div>
               </div>
               <Progress value={g.targetCents ? (g.savedCents / g.targetCents) * 100 : 0} size="md" />
-              <div className="flex justify-between font-display text-sm leading-none font-extrabold">
+              <div className="flex justify-between text-sm leading-none font-medium">
                 <span className="text-g">{g.targetCents ? Math.round((g.savedCents / g.targetCents) * 100) : 0}%</span>
                 <span className="text-mut">faltam {formatBRL(Math.max(0, g.targetCents - g.savedCents))}</span>
               </div>
             </Card>
-            <GoalTrail goal={g} saving={deposit.isPending} onSave={(amountCents) => deposit.mutate({ goal: g, amountCents })} />
+            <DepositCard key={g.id} goal={g} />
           </div>
         ) : null}
       </QueryState>

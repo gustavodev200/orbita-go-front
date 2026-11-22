@@ -4,40 +4,29 @@ import { describe, expect, it, vi } from "vitest";
 
 import { Button, buttonVariants } from "@/components/ui/button";
 
-describe("Button 3D", () => {
-  it("usa primary/md por padrão com sombra sólida e press de 5px", () => {
+describe("Button", () => {
+  it("usa primary/md por padrão: pílula laranja, sem caixa alta", () => {
     render(<Button>Salvar</Button>);
     const btn = screen.getByRole("button", { name: "Salvar" });
     expect(btn).toHaveAttribute("data-variant", "primary");
     expect(btn).toHaveAttribute("type", "button");
     expect(btn.className).toContain("bg-g");
-    expect(btn.className).toContain("[--btn-sh:var(--gd)]");
-    expect(btn.className).toContain("[--press:5px]");
-    expect(btn.className).toContain("active:translate-y-(--press)");
-    expect(btn.className).toContain("uppercase");
+    expect(btn.className).toContain("rounded-full");
+    expect(btn.className).not.toContain("uppercase");
   });
 
   it.each([
-    ["orange", "bg-o", "--od"],
-    ["gold", "bg-y", "--yd"],
-    ["blue", "bg-b", "--bdk"],
-    ["danger", "bg-r", "--rd"],
-    ["ai", "bg-p", "--pd"],
-  ] as const)("variante %s tem cor e sombra próprias", (variant, bg, shadow) => {
-    const cls = buttonVariants({ variant });
-    expect(cls).toContain(bg);
-    expect(cls).toContain(`[--btn-sh:var(${shadow})]`);
+    ["dark", "bg-ink"],
+    ["secondary", "bg-sf2"],
+    ["danger", "bg-r"],
+  ] as const)("variante %s tem cor própria", (variant, bg) => {
+    expect(buttonVariants({ variant })).toContain(bg);
   });
 
-  it("secundário usa borda 2px com base 5px (sem sombra sólida)", () => {
-    const cls = buttonVariants({ variant: "secondary" });
-    expect(cls).toContain("border-b-[5px]");
-    expect(cls).toContain("active:border-b-2");
-    expect(cls).not.toContain("shadow-[0_var(--press)");
-  });
-
-  it("tamanho pequeno pressiona 4px", () => {
-    expect(buttonVariants({ size: "sm" })).toContain("[--press:4px]");
+  it("variantes legadas mapeiam para a aparência nova (sem sombra 3D)", () => {
+    for (const variant of ["orange", "gold", "blue", "ai"] as const) {
+      expect(buttonVariants({ variant })).not.toContain("--btn-sh");
+    }
   });
 
   it("dispara onClick e respeita disabled", async () => {

@@ -28,7 +28,7 @@ function Tooltip({
           side={side}
           sideOffset={10}
           className={cn(
-            "z-50 rounded-xl border-2 border-bd bg-sf px-3 py-2 font-display text-[13px] leading-none font-extrabold text-ink shadow-[0_10px_24px_rgba(0,0,0,.12)]",
+            "z-50 rounded-xl border border-bd bg-sf px-3 py-2 font-display text-[13px] leading-none font-semibold text-ink shadow-[0_10px_24px_rgba(0,0,0,.12)]",
             "data-[state=delayed-open]:animate-in data-[state=delayed-open]:fade-in-0 data-[state=delayed-open]:zoom-in-95",
           )}
         >

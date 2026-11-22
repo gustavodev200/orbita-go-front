@@ -1,17 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Figtree, Nunito } from "next/font/google";
+import { Inter } from "next/font/google";
 
 import { ServiceWorkerRegister } from "@/components/shell/service-worker-register";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const nunito = Nunito({ variable: "--font-nunito", subsets: ["latin"], weight: ["600", "700", "800", "900"] });
-const figtree = Figtree({ variable: "--font-figtree", subsets: ["latin"], weight: ["400", "500", "600", "700", "800"] });
+const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "órbitaGO",
-  description: "Sua vida, subindo de nível. Finanças e tarefas com ofensivas, missões e o Cobre torcendo por você.",
+  description: "Seu dia em um lugar só: agenda, lembretes, tarefas e finanças.",
   // `manifest.ts` já injeta o <link rel="manifest">; `icon.png`/`apple-icon.png`
   // (convenção de arquivo) já injetam favicon e apple-touch-icon automaticamente.
   appleWebApp: {
@@ -28,8 +27,8 @@ export const viewport: Viewport = {
   // home indicator — o header e o bottom-nav dependem dele.
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FBF6EE" },
-    { media: "(prefers-color-scheme: dark)", color: "#161310" },
+    { media: "(prefers-color-scheme: light)", color: "#F4F4F6" },
+    { media: "(prefers-color-scheme: dark)", color: "#0D0D0F" },
   ],
 };
 
@@ -38,14 +37,14 @@ const themeScript = `(function(){try{var s=JSON.parse(localStorage.getItem('orbi
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning className={`${nunito.variable} ${figtree.variable} h-full antialiased`}>
+    <html lang="pt-BR" suppressHydrationWarning className={`${inter.variable} h-full antialiased`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        {/* Material Symbols Rounded (FILL 1, wght 600) — mesmo eixo do design. */}
+        {/* Material Symbols Rounded — contorno por padrão; `.icon-fill` usa o eixo FILL. */}
         {/* eslint-disable-next-line @next/next/no-page-custom-font, @next/next/google-font-display -- ícones precisam de "block" para não piscar o nome da ligadura */}
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,600,1,0&display=block"
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0..1,0&display=block"
         />
       </head>
       <body className="min-h-full bg-bg text-ink" suppressHydrationWarning>
