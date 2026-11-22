@@ -15,7 +15,7 @@ export type TxSheetState = {
 export type QuickAddState =
   | { kind: null }
   | { kind: "task"; date?: string | null; editing?: Task }
-  | { kind: "reminder"; date?: string };
+  | { kind: "reminder"; date?: string; time?: string };
 
 type AppState = {
   me: Me | null;

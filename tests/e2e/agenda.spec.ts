@@ -46,4 +46,22 @@ test.describe("Agenda", () => {
     await page.getByRole("button", { name: "Enviar teste" }).click();
     await expect.poll(() => apiCalls.some((c) => c.method === "POST" && c.pathname === "/push/test")).toBe(true);
   });
+
+  test("visão Dia mostra as horas e tocar num horário abre lembrete naquela hora", async ({ authedPage: page }) => {
+    await page.goto("/agenda");
+    await page.getByRole("tab", { name: "Ver dia" }).click();
+    const calendar = page.locator(".orbita-calendar");
+    // Duas células por horário: rótulo e faixa — a faixa é a última.
+    const slot = calendar.locator('[data-time="10:00:00"]').last();
+    await expect(slot).toBeVisible();
+    // A coluna do dia fica por cima da faixa (é ela que recebe o toque real):
+    // clica pela coordenada, como o dedo do usuário.
+    await slot.scrollIntoViewIfNeeded();
+    const box = await slot.boundingBox();
+    if (!box) throw new Error("faixa das 10:00 sem caixa");
+    await page.mouse.click(box.x + box.width / 2, box.y + 6);
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toContainText("Novo lembrete");
+    await expect(dialog.getByLabel("Horário do lembrete")).toHaveValue("10:00");
+  });
 });

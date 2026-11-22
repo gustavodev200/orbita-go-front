@@ -90,6 +90,10 @@ export function AgendaScreen() {
           items={agenda.items}
           selected={selected}
           onSelectDay={setSelected}
+          onSelectSlot={(date, time) => {
+            setSelected(date);
+            openQuickAdd({ kind: "reminder", date, time });
+          }}
           onRangeChange={(start, end) => setRange((r) => (r.start === start && r.end === end ? r : { start, end }))}
         />
       </Card>

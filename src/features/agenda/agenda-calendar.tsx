@@ -5,6 +5,7 @@ import FullCalendar, { type DatesSetInfo } from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/react/daygrid";
 import interactionPlugin from "@fullcalendar/react/interaction";
 import listPlugin from "@fullcalendar/react/list";
+import timeGridPlugin from "@fullcalendar/react/timegrid";
 import ptBrLocale from "@fullcalendar/react/locales/pt-br";
 import breezyTheme from "@fullcalendar/react/themes/breezy";
 
@@ -23,19 +24,30 @@ function toISODay(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
+/** "HH:mm" + 30 min (sem passar da meia-noite). */
+function plus30(time: string): string {
+  const [h, m] = time.split(":").map(Number);
+  const total = Math.min(h * 60 + m + 30, 23 * 60 + 59);
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
 /**
- * Calendário (FullCalendar v7, tema breezy com a paleta do app). Mês no
- * desktop; no celular, mês com pontinhos e a lista da semana como opção.
+ * Calendário (FullCalendar v7, tema breezy com a paleta do app): Mês,
+ * Semana (desktop), Dia (por hora) e Lista. Itens com horário viram blocos
+ * de 30 min nas visões por hora; o resto fica na faixa "dia inteiro".
  */
 export default function AgendaCalendar({
   items,
   selected,
   onSelectDay,
+  onSelectSlot,
   onRangeChange,
 }: {
   items: AgendaItem[];
   selected: string;
   onSelectDay: (iso: string) => void;
+  /** Toque num horário vazio das visões por hora. */
+  onSelectSlot: (iso: string, time: string) => void;
   onRangeChange: (start: string, end: string) => void;
 }) {
   const desktop = useIsDesktop();
@@ -44,9 +56,10 @@ export default function AgendaCalendar({
     () =>
       items.map((i) => ({
         id: i.key,
-        title: i.time ? `${i.time} ${i.title}` : i.title,
-        start: i.date,
-        allDay: true,
+        title: i.title,
+        start: i.time ? `${i.date}T${i.time}` : i.date,
+        end: i.time ? `${i.date}T${plus30(i.time)}` : undefined,
+        allDay: !i.time,
         color: AGENDA_COLOR[i.kind],
         className: i.done ? "opacity-50 line-through" : undefined,
         extendedProps: { date: i.date, color: AGENDA_COLOR[i.kind] },
@@ -57,18 +70,32 @@ export default function AgendaCalendar({
   return (
     <div className="orbita-calendar">
       <FullCalendar
-        plugins={[breezyTheme, dayGridPlugin, listPlugin, interactionPlugin]}
+        plugins={[breezyTheme, dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
         locale={ptBrLocale}
         timeZone="local"
         initialView="dayGridMonth"
-        headerToolbar={{ start: "title", end: desktop ? "dayGridMonth,listWeek prev,today,next" : "prev,next" }}
-        footerToolbar={desktop ? false : { center: "dayGridMonth,listWeek" }}
-        buttons={{ listWeek: { text: "Semana" } }}
+        headerToolbar={{
+          start: "title",
+          end: desktop ? "dayGridMonth,timeGridWeek,timeGridDay,listWeek prev,today,next" : "prev,today,next",
+        }}
+        footerToolbar={desktop ? false : { center: "dayGridMonth,timeGridDay,listWeek" }}
+        buttons={{
+          dayGridMonth: { text: "Mês", hint: "Ver mês" },
+          timeGridWeek: { text: "Semana", hint: "Ver semana" },
+          timeGridDay: { text: "Dia", hint: "Ver dia" },
+          listWeek: { text: "Lista", hint: "Ver lista da semana" },
+        }}
+        navLinks
+        slotMinTime="06:00:00"
+        slotHeaderFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
+        scrollTime="08:00:00"
+        allDayText="dia todo"
+        nowIndicator
         height="auto"
         fixedWeekCount={false}
         dayMaxEvents={desktop ? 3 : true}
         borderless
-        eventDisplay={desktop ? "block" : "list-item"}
+        views={{ dayGridMonth: { eventDisplay: desktop ? "block" : "list-item" } }}
         // No celular a célula do mês é estreita: só o ponto colorido (o texto vai pro painel do dia).
         eventContent={(info) =>
           !desktop && info.view.type === "dayGridMonth" ? (
@@ -82,10 +109,19 @@ export default function AgendaCalendar({
           )
         }
         events={events}
-        dateClick={(info) => onSelectDay(info.dateStr.slice(0, 10))}
+        dateClick={(info) => {
+          const day = info.dateStr.slice(0, 10);
+          if (info.allDay) onSelectDay(day);
+          else onSelectSlot(day, info.dateStr.slice(11, 16));
+        }}
         eventClick={(info) => onSelectDay(String(info.event.extendedProps.date))}
-        dayCellClass={(info) => (toISODay(info.date) === selected ? "orbita-selected-day" : "")}
-        datesSet={(info: DatesSetInfo) => onRangeChange(toISODay(info.start), toISODay(info.end))}
+        dayCellClass={(info) =>
+          info.view.type === "dayGridMonth" && toISODay(info.date) === selected ? "orbita-selected-day" : ""
+        }
+        datesSet={(info: DatesSetInfo) => {
+          onRangeChange(toISODay(info.start), toISODay(info.end));
+          if (info.view.type === "timeGridDay") onSelectDay(toISODay(info.start));
+        }}
         noEventsContent="Nada marcado nesta semana."
       />
     </div>

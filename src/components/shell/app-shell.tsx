@@ -42,7 +42,13 @@ function QuickAddLayer() {
         />
       ) : null}
       {quickAdd.kind === "reminder" ? (
-        <ReminderDialog key={`r-${quickAdd.date}`} open onOpenChange={onOpenChange} initialDate={quickAdd.date} />
+        <ReminderDialog
+          key={`r-${quickAdd.date}-${quickAdd.time}`}
+          open
+          onOpenChange={onOpenChange}
+          initialDate={quickAdd.date}
+          initialTime={quickAdd.time}
+        />
       ) : null}
     </>
   );

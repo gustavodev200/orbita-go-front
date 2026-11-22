@@ -23,17 +23,20 @@ export function ReminderDialog({
   open,
   onOpenChange,
   initialDate,
+  initialTime,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   initialDate?: string;
+  /** "HH:mm" — vem do toque num horário da visão Dia/Semana. */
+  initialTime?: string;
 }) {
   const today = todayISO();
   const [text, setText] = useState("");
   const [title, setTitle] = useState("");
   const [kind, setKind] = useState<Kind>("task");
   const [date, setDate] = useState(initialDate && initialDate >= today ? initialDate : today);
-  const [time, setTime] = useState("09:00");
+  const [time, setTime] = useState(initialTime ?? "09:00");
   const [repeat, setRepeat] = useState<Repeat>("none");
   const parse = useParseReminder();
   const ensurePush = useEnsurePush();
