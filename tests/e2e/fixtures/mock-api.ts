@@ -19,6 +19,7 @@ import {
   TASKS,
   TRANSACTIONS,
   UPCOMING_RECURRINGS,
+  HABITS,
 } from "./fixtures-data";
 
 export type RecordedCall = { method: string; pathname: string; body: unknown };
@@ -48,6 +49,7 @@ export async function mockApi(page: Page, apiUrl: string): Promise<RecordedCall[
   const calls: RecordedCall[] = [];
   const tasks: Task[] = TASKS.map((t) => ({ ...t }));
   const reminders: Reminder[] = REMINDERS.map((r) => ({ ...r }));
+  const habits = HABITS.map((h) => ({ ...h, checks: [...h.checks] }));
 
   await page.route(`${apiUrl}/**`, async (route) => {
     const request = route.request();
@@ -140,6 +142,30 @@ export async function mockApi(page: Page, apiUrl: string): Promise<RecordedCall[
     if (pathname.match(/^\/tasks\/[^/]+$/) && method === "PATCH") return json(route, { ...tasks[0], ...(body as object) });
     if (pathname.match(/^\/tasks\/[^/]+$/) && method === "DELETE") return json(route, { ok: true });
 
+    if (pathname === "/habits" && method === "GET") return json(route, habits);
+    if (pathname === "/habits" && method === "POST") {
+      const h = { id: `hab-${habits.length + 1}`, weekdays: [0, 1, 2, 3, 4, 5, 6], reminderTime: null, checks: [], streak: 0, ...(body as object) };
+      habits.push(h as unknown as (typeof habits)[number]);
+      return json(route, h);
+    }
+    const habitCheck = pathname.match(/^\/habits\/([^/]+)\/checks\/(\d{4}-\d{2}-\d{2})$/);
+    if (habitCheck && (method === "PUT" || method === "DELETE")) {
+      const h = habits.find((x) => x.id === habitCheck[1]);
+      if (!h) return json(route, { statusCode: 404, message: "Hábito não encontrado" }, 404);
+      h.checks = method === "PUT" ? [...new Set([...h.checks, habitCheck[2]])] : h.checks.filter((d) => d !== habitCheck[2]);
+      h.streak = h.checks.length;
+      return json(route, h);
+    }
+    if (pathname.match(/^\/habits\/[^/]+$/) && method === "PATCH") {
+      const h = habits.find((x) => x.id === pathname.split("/")[2]);
+      Object.assign(h ?? {}, body as object);
+      return json(route, h);
+    }
+    if (pathname.match(/^\/habits\/[^/]+$/) && method === "DELETE") {
+      const i = habits.findIndex((x) => x.id === pathname.split("/")[2]);
+      const [removed] = habits.splice(i, 1);
+      return json(route, removed);
+    }
     if (pathname === "/reminders/bulk-delete" && method === "POST") {
       const ids = (body as { ids: string[] }).ids;
       const before = reminders.length;

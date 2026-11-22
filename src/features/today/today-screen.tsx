@@ -1,5 +1,6 @@
 "use client";
 
+import { TodayHabitsCard } from "@/features/habits/today-habits-card";
 import { BalanceHero } from "./balance-hero";
 import { DayAgendaCard } from "./day-agenda-card";
 import { TodayTasksCard } from "./today-tasks-card";
@@ -18,6 +19,7 @@ export function TodayScreen() {
       </div>
       <div className="flex min-w-0 flex-col gap-5">
         <TodayTasksCard />
+        <TodayHabitsCard />
         <UpcomingRecurringsCard />
       </div>
     </div>

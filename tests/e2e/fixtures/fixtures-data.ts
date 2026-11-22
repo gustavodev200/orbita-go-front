@@ -194,3 +194,16 @@ export const COMPARE = {
   previous: { month: "2026-08", byCategory: [{ key: "ali", cents: 40000 }], totalCents: 40000 },
   current: { month: "2026-09", byCategory: [{ key: "ali", cents: 45000 }], totalCents: 45000 },
 };
+
+export const HABITS = [
+  {
+    id: "hab-1",
+    name: "Beber água",
+    icon: "water_drop",
+    color: "#3B82F6",
+    weekdays: [0, 1, 2, 3, 4, 5, 6],
+    reminderTime: null as string | null,
+    checks: [] as string[],
+    streak: 0,
+  },
+];

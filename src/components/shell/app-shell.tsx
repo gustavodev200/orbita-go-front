@@ -7,6 +7,7 @@ import { LogoMark } from "@/components/orbita/logo";
 import { ErrorState } from "@/components/orbita/states";
 import { useSession } from "@/features/auth/use-session";
 import { NewTransaction } from "@/features/finance/new-transaction/new-transaction";
+import { HabitDialog } from "@/features/habits/habit-dialog";
 import { useMe } from "@/features/me/hooks";
 import { ReminderDialog } from "@/features/reminders/reminder-dialog";
 import { TaskDialog } from "@/features/tasks/task-dialog";
@@ -40,6 +41,9 @@ function QuickAddLayer() {
           task={quickAdd.editing}
           initialDate={quickAdd.date}
         />
+      ) : null}
+      {quickAdd.kind === "habit" ? (
+        <HabitDialog key={quickAdd.editing?.id ?? "new-habit"} open onOpenChange={onOpenChange} habit={quickAdd.editing} />
       ) : null}
       {quickAdd.kind === "reminder" ? (
         <ReminderDialog

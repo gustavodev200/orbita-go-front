@@ -11,6 +11,7 @@ const ITEMS = [
   { key: "tx", label: "Lançamento", hint: "gasto ou entrada", icon: "payments" },
   { key: "task", label: "Tarefa", hint: "algo pra fazer", icon: "task_alt" },
   { key: "reminder", label: "Lembrete", hint: "aviso no celular", icon: "notifications" },
+  { key: "habit", label: "Hábito", hint: "rotina para manter", icon: "self_improvement" },
 ] as const;
 
 /** Menu do botão "+": cria lançamento, tarefa ou lembrete de qualquer tela. */
@@ -29,6 +30,7 @@ export function QuickAddMenu({
   const pick = (key: (typeof ITEMS)[number]["key"]) => {
     if (key === "tx") openTxSheet();
     else if (key === "task") openQuickAdd({ kind: "task", date: todayISO() });
+    else if (key === "habit") openQuickAdd({ kind: "habit" });
     else openQuickAdd({ kind: "reminder", date: todayISO() });
   };
 

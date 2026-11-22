@@ -194,3 +194,18 @@ const monthStatSchema = z.object({
 export const compareSchema = z.object({ previous: monthStatSchema, current: monthStatSchema });
 export type Compare = z.infer<typeof compareSchema>;
 
+
+export const habitSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  icon: z.string(),
+  color: z.string(),
+  /** 0 = domingo … 6 = sábado. */
+  weekdays: z.array(z.number()),
+  reminderTime: z.string().nullable().default(null),
+  /** Dias marcados (YYYY-MM-DD) dos últimos 35 dias. */
+  checks: z.array(z.string()).default([]),
+  /** Dias agendados seguidos marcados até hoje. */
+  streak: z.number().default(0),
+});
+export type Habit = z.infer<typeof habitSchema>;
