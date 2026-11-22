@@ -78,3 +78,18 @@ export function buildAgenda(
 export function agendaForDay(sources: Parameters<typeof buildAgenda>[0], day: string): AgendaItem[] {
   return buildAgenda(sources, day, addDaysISO(day, 1));
 }
+
+/** Início da grade por hora: 06:00, ou a hora cheia do item mais cedo se for antes. */
+export function slotMinTimeFor(items: Pick<AgendaItem, "time">[]): string {
+  const hours = items.filter((i) => i.time).map((i) => Number(i.time!.slice(0, 2)));
+  const h = Math.min(6, ...hours);
+  return `${String(h).padStart(2, "0")}:00:00`;
+}
+
+/** O horário (data local + "HH:mm") já passou? Usado para não criar lembrete que nunca dispara. */
+export function isPastSlot(date: string, time: string, now: Date = new Date()): boolean {
+  const [y, m, d] = date.split("-").map(Number);
+  const [hh, mm] = time.split(":").map(Number);
+  // O minuto do horário já terminou.
+  return new Date(y, m - 1, d, hh, mm).getTime() + 60_000 <= now.getTime();
+}

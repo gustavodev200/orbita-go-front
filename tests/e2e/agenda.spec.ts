@@ -50,6 +50,8 @@ test.describe("Agenda", () => {
   test("visão Dia mostra as horas e tocar num horário abre lembrete naquela hora", async ({ authedPage: page }) => {
     await page.goto("/agenda");
     await page.getByRole("tab", { name: "Ver dia" }).click();
+    // Amanhã: 10:00 de hoje pode já ter passado (horário passado não cria lembrete).
+    await page.getByRole("button", { name: /próximo/i }).click();
     const calendar = page.locator(".orbita-calendar");
     // Duas células por horário: rótulo e faixa — a faixa é a última.
     const slot = calendar.locator('[data-time="10:00:00"]').last();
@@ -75,5 +77,27 @@ test.describe("Agenda", () => {
     await expect
       .poll(() => apiCalls.find((c) => c.method === "POST" && c.pathname === "/reminders/bulk-delete")?.body)
       .toEqual({ ids: ["rem-1"] });
+  });
+
+  test("trocar para Dia mantém o dia escolhido no mês", async ({ authedPage: page }) => {
+    const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+    const base = new Date(`${today}T12:00:00Z`);
+    const shifted = new Date(base);
+    shifted.setUTCDate(base.getUTCDate() + 2);
+    if (shifted.getUTCMonth() !== base.getUTCMonth()) shifted.setUTCDate(base.getUTCDate() - 2);
+    const target = shifted.toISOString().slice(0, 10);
+    const dm = `${target.slice(8, 10)}/${target.slice(5, 7)}`;
+
+    await page.goto("/agenda");
+    const calendar = page.locator(".orbita-calendar");
+    const cell = calendar.locator(`[data-date="${target}"]`).first();
+    const box = await cell.boundingBox();
+    if (!box) throw new Error("célula do dia sem caixa");
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height - 6);
+    await expect(page.getByRole("heading", { level: 2 }).filter({ hasText: dm })).toBeVisible();
+
+    await page.getByRole("tab", { name: "Ver dia" }).click();
+    await expect(calendar.locator(`[data-date="${target}"]`).first()).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2 }).filter({ hasText: dm })).toBeVisible();
   });
 });

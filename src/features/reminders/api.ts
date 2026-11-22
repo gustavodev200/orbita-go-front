@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import { get, send } from "@/lib/api/client";
+import { chunk } from "@/lib/chunk";
 import { reminderDraftSchema, reminderSchema, type ReminderDraft } from "@/lib/api/schemas";
 
 export const reminderKeys = { all: ["reminders"] as const };
@@ -12,5 +13,11 @@ export const createReminder = (input: ReminderDraft & { enabled?: boolean }) =>
 export const updateReminder = (id: string, input: Partial<ReminderDraft> & { enabled?: boolean }) =>
   send("patch", `/reminders/${id}`, reminderSchema, input);
 export const deleteReminder = (id: string) => send("delete", `/reminders/${id}`, z.unknown());
-export const bulkDeleteReminders = (ids: string[]) =>
-  send("post", "/reminders/bulk-delete", z.object({ deleted: z.number() }), { ids });
+/** Exclusão em lote; a rota aceita até 200 ids por chamada, então envia em lotes. */
+export async function bulkDeleteReminders(ids: string[]) {
+  let deleted = 0;
+  for (const part of chunk(ids, 200)) {
+    deleted += (await send("post", "/reminders/bulk-delete", z.object({ deleted: z.number() }), { ids: part })).deleted;
+  }
+  return { deleted };
+}

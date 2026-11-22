@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { agendaForDay, buildAgenda } from "@/features/agenda/agenda-items";
+import { agendaForDay, buildAgenda, isPastSlot, slotMinTimeFor } from "@/features/agenda/agenda-items";
 import type { Recurring, Reminder, Task } from "@/lib/api/schemas";
 
 function reminder(over: Partial<Reminder> = {}): Reminder {
@@ -77,5 +77,27 @@ describe("buildAgenda", () => {
   it("conta paga aparece concluída", () => {
     const [item] = agendaForDay({ recurrings: [bill({ status: "paid" })] }, "2026-10-05");
     expect(item.done).toBe(true);
+  });
+});
+
+describe("slotMinTimeFor", () => {
+  it("padrão 06:00 quando nada começa antes", () => {
+    expect(slotMinTimeFor([{ time: "09:00" }, { time: null }])).toBe("06:00:00");
+  });
+  it("desce até a hora do item mais cedo", () => {
+    expect(slotMinTimeFor([{ time: "05:30" }, { time: "09:00" }])).toBe("05:00:00");
+    expect(slotMinTimeFor([{ time: "00:15" }])).toBe("00:00:00");
+  });
+});
+
+describe("isPastSlot", () => {
+  const now = new Date(2026, 10, 22, 10, 30); // 22/11 10:30 (hora local)
+  it("horário que já passou", () => {
+    expect(isPastSlot("2026-11-22", "10:00", now)).toBe(true);
+    expect(isPastSlot("2026-11-21", "23:00", now)).toBe(true);
+  });
+  it("horário ainda por vir", () => {
+    expect(isPastSlot("2026-11-22", "10:30", now)).toBe(false);
+    expect(isPastSlot("2026-11-23", "08:00", now)).toBe(false);
   });
 });

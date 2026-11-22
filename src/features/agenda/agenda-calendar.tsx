@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import FullCalendar, { type DatesSetInfo } from "@fullcalendar/react";
+import { useMemo, useRef } from "react";
+import FullCalendar, { type CalendarRef, type DatesSetInfo } from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/react/daygrid";
 import interactionPlugin from "@fullcalendar/react/interaction";
 import listPlugin from "@fullcalendar/react/list";
@@ -14,7 +14,9 @@ import "@fullcalendar/react/themes/breezy/theme.css";
 import "./calendar-palette.css";
 
 import { useIsDesktop } from "@/hooks/use-media-query";
-import { AGENDA_COLOR, type AgendaItem } from "./agenda-items";
+import { toast } from "sonner";
+
+import { AGENDA_COLOR, isPastSlot, slotMinTimeFor, type AgendaItem } from "./agenda-items";
 
 /** `Date` local do calendário → "YYYY-MM-DD" (o calendário trabalha em dias locais). */
 function toISODay(d: Date): string {
@@ -51,6 +53,9 @@ export default function AgendaCalendar({
   onRangeChange: (start: string, end: string) => void;
 }) {
   const desktop = useIsDesktop();
+  const calendarRef = useRef<CalendarRef>(null);
+  /** Visão do último `datesSet` — distingue "trocou de visão" de "navegou na mesma". */
+  const viewRef = useRef("dayGridMonth");
 
   const events = useMemo(
     () =>
@@ -70,6 +75,8 @@ export default function AgendaCalendar({
   return (
     <div className="orbita-calendar">
       <FullCalendar
+        ref={calendarRef}
+        initialDate={selected}
         plugins={[breezyTheme, dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
         locale={ptBrLocale}
         timeZone="local"
@@ -86,7 +93,7 @@ export default function AgendaCalendar({
           listWeek: { text: "Lista", hint: "Ver lista da semana" },
         }}
         navLinks
-        slotMinTime="06:00:00"
+        slotMinTime={slotMinTimeFor(items)}
         slotHeaderFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
         scrollTime="08:00:00"
         allDayText="dia todo"
@@ -111,16 +118,31 @@ export default function AgendaCalendar({
         events={events}
         dateClick={(info) => {
           const day = info.dateStr.slice(0, 10);
+          const time = info.dateStr.slice(11, 16);
           if (info.allDay) onSelectDay(day);
-          else onSelectSlot(day, info.dateStr.slice(11, 16));
+          else if (isPastSlot(day, time)) {
+            onSelectDay(day);
+            toast.message("Esse horário já passou — escolha um horário futuro para o lembrete.");
+          } else onSelectSlot(day, time);
         }}
         eventClick={(info) => onSelectDay(String(info.event.extendedProps.date))}
         dayCellClass={(info) =>
           info.view.type === "dayGridMonth" && toISODay(info.date) === selected ? "orbita-selected-day" : ""
         }
         datesSet={(info: DatesSetInfo) => {
-          onRangeChange(toISODay(info.start), toISODay(info.end));
-          if (info.view.type === "timeGridDay") onSelectDay(toISODay(info.start));
+          const type = info.view.type;
+          const switched = type !== viewRef.current;
+          viewRef.current = type;
+          const start = toISODay(info.start);
+          const end = toISODay(info.end);
+          onRangeChange(start, end);
+          // Ao entrar numa visão por hora, abre no dia escolhido (não em "hoje").
+          if (switched && type.startsWith("timeGrid") && (selected < start || selected >= end)) {
+            calendarRef.current?.getApi().gotoDate(selected);
+            return;
+          }
+          // Navegar (‹ ›) na visão Dia muda o dia do painel.
+          if (type === "timeGridDay" && !switched) onSelectDay(start);
         }}
         noEventsContent="Nada marcado nesta semana."
       />
