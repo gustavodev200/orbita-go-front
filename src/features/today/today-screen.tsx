@@ -1,5 +1,6 @@
 "use client";
 
+import { FocusShortcut } from "@/features/focus/focus-shortcut";
 import { TodayHabitsCard } from "@/features/habits/today-habits-card";
 import { BalanceHero } from "./balance-hero";
 import { DayAgendaCard } from "./day-agenda-card";
@@ -20,6 +21,7 @@ export function TodayScreen() {
       <div className="flex min-w-0 flex-col gap-5">
         <TodayTasksCard />
         <TodayHabitsCard />
+        <FocusShortcut />
         <UpcomingRecurringsCard />
       </div>
     </div>

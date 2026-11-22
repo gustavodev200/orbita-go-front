@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 import { CheckCircle } from "@/components/orbita/check-circle";
 import { ConfirmDialog } from "@/components/orbita/confirm-dialog";
@@ -15,6 +16,7 @@ import { Progress } from "@/components/ui/progress";
 import type { Task } from "@/lib/api/schemas";
 import { PRIORITY_COLOR, PRIORITY_LABEL } from "@/lib/colors";
 import { addDaysISO, dayGroupLabel, formatDM, todayISO } from "@/lib/dates";
+import { useFocusStore } from "@/features/focus/focus-store";
 import { useSelection } from "@/hooks/use-selection";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/app-store";
@@ -64,7 +66,14 @@ export function TaskRow({
   const today = todayISO();
   const del = useDeleteTask();
   const openQuickAdd = useAppStore((s) => s.openQuickAdd);
+  const router = useRouter();
   const meta = metaLine(task, group, today);
+  const focus = () => {
+    const f = useFocusStore.getState();
+    f.reset();
+    f.start({ taskId: task.id });
+    router.push("/foco");
+  };
   return (
     <div className="flex items-center gap-3 px-4 py-3">
       {selection ? (
@@ -96,6 +105,12 @@ export function TaskRow({
             <Icon name="more_horiz" size={20} />
           </DropdownMenuTrigger>
           <DropdownMenuContent side="left" align="start">
+            {task.done ? null : (
+              <DropdownMenuItem onSelect={focus}>
+                <Icon name="timer" />
+                Focar
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem tone="info" onSelect={() => openQuickAdd({ kind: "task", editing: task })}>
               <Icon name="edit" />
               Editar

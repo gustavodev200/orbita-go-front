@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { Icon } from "@/components/orbita/icon";
 import { Avatar } from "@/components/ui/avatar";
+import { FocusPill } from "@/features/focus/focus-pill";
 import { greeting } from "@/lib/dates";
 import { useAppStore } from "@/stores/app-store";
 import { titleFor } from "./nav";
@@ -42,6 +43,7 @@ export function AppHeader() {
         {home ? `${greeting()}${first ? `, ${first}` : ""}` : titleFor(pathname)}
       </h1>
       <div className="flex-1" />
+      <FocusPill />
       <button
         type="button"
         onClick={toggle}

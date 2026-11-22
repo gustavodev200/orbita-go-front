@@ -6,6 +6,7 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/tarefas", label: "Tarefas", icon: "task_alt", title: "Tarefas" },
   { href: "/financas", label: "Finanças", icon: "account_balance_wallet", title: "Finanças" },
   { href: "/habitos", label: "Hábitos", icon: "self_improvement", title: "Hábitos" },
+  { href: "/foco", label: "Foco", icon: "timer", title: "Foco" },
   { href: "/perfil", label: "Perfil", icon: "person", title: "Perfil" },
 ];
 
