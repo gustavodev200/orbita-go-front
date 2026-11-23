@@ -19,6 +19,7 @@ import { monthName } from "@/lib/dates";
 import { formatBRL, MINUS } from "@/lib/format";
 import { signOut } from "@/features/auth/auth";
 import { useCategories, useCompare, useUpdateMe } from "@/features/me/hooks";
+import { ClaudeConnectCard } from "@/features/api-tokens/claude-card";
 import { NotificationsCard } from "@/features/push/notifications-card";
 import { useInstallPrompt } from "@/features/pwa/use-install-prompt";
 import { useAppStore } from "@/stores/app-store";
@@ -194,6 +195,7 @@ export function ProfileScreen() {
 
       <div className="flex min-w-0 flex-col gap-5">
         <NotificationsCard />
+        <ClaudeConnectCard />
         <Card padding="none" className="flex flex-col [&>*+*]:border-t [&>*+*]:border-sf2 px-5 py-1">
           <SettingRow icon="contrast" label="Tema">
             <SegmentedControl value={theme} onChange={setThemePref} options={THEMES} ariaLabel="Tema" className="w-[200px]" itemClassName="h-8 text-[13px]" />

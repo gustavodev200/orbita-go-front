@@ -209,3 +209,35 @@ export const habitSchema = z.object({
   streak: z.number().default(0),
 });
 export type Habit = z.infer<typeof habitSchema>;
+
+/** Card de vocabulário: `pt` = termo que a pessoa não sabia, `en` = tradução no contexto. */
+export const flashcardSchema = z.object({
+  id: z.string(),
+  pt: z.string(),
+  en: z.string(),
+  example: z.string().nullable().default(null),
+  note: z.string().nullable().default(null),
+  correctCount: z.number().default(0),
+  wrongCount: z.number().default(0),
+  lastReviewedAt: z.string().nullable().default(null),
+  createdAt: z.string(),
+});
+export type Flashcard = z.infer<typeof flashcardSchema>;
+
+export const createFlashcardsResultSchema = z.object({
+  created: z.array(flashcardSchema),
+  skipped: z.array(z.object({ pt: z.string(), en: z.string() })),
+});
+
+/** Token pessoal (só o prefixo volta na lista; o valor completo só na criação). */
+export const apiTokenSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  prefix: z.string(),
+  lastUsedAt: z.string().nullable().default(null),
+  createdAt: z.string(),
+});
+export type ApiToken = z.infer<typeof apiTokenSchema>;
+
+export const createdApiTokenSchema = apiTokenSchema.extend({ token: z.string() });
+export type CreatedApiToken = z.infer<typeof createdApiTokenSchema>;

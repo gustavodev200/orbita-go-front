@@ -47,9 +47,9 @@ test.describe("Agenda", () => {
     await expect.poll(() => apiCalls.some((c) => c.method === "POST" && c.pathname === "/push/test")).toBe(true);
   });
 
-  test("visão Dia mostra as horas e tocar num horário abre lembrete naquela hora", async ({ authedPage: page }) => {
+  test("abre na visão Dia; tocar num horário abre lembrete naquela hora", async ({ authedPage: page }) => {
     await page.goto("/agenda");
-    await page.getByRole("tab", { name: "Ver dia" }).click();
+    await expect(page.getByRole("tab", { name: "Ver dia" })).toHaveAttribute("aria-selected", "true");
     // Amanhã: 10:00 de hoje pode já ter passado (horário passado não cria lembrete).
     await page.getByRole("button", { name: /próximo/i }).click();
     const calendar = page.locator(".orbita-calendar");
@@ -89,6 +89,8 @@ test.describe("Agenda", () => {
     const dm = `${target.slice(8, 10)}/${target.slice(5, 7)}`;
 
     await page.goto("/agenda");
+    // Agenda abre no Dia: vai pro Mês pra escolher o dia.
+    await page.getByRole("tab", { name: "Ver mês" }).click();
     const calendar = page.locator(".orbita-calendar");
     const cell = calendar.locator(`[data-date="${target}"]`).first();
     const box = await cell.boundingBox();

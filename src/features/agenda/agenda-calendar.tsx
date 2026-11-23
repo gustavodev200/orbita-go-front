@@ -34,7 +34,7 @@ function plus30(time: string): string {
 }
 
 /**
- * Calendário (FullCalendar v7, tema breezy com a paleta do app): Mês,
+ * Calendário (FullCalendar v7, tema breezy com a paleta do app), abre no Dia: Mês,
  * Semana (desktop), Dia (por hora) e Lista. Itens com horário viram blocos
  * de 30 min nas visões por hora; o resto fica na faixa "dia inteiro".
  */
@@ -55,7 +55,7 @@ export default function AgendaCalendar({
   const desktop = useIsDesktop();
   const calendarRef = useRef<CalendarRef>(null);
   /** Visão do último `datesSet` — distingue "trocou de visão" de "navegou na mesma". */
-  const viewRef = useRef("dayGridMonth");
+  const viewRef = useRef("timeGridDay");
 
   const events = useMemo(
     () =>
@@ -80,7 +80,7 @@ export default function AgendaCalendar({
         plugins={[breezyTheme, dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
         locale={ptBrLocale}
         timeZone="local"
-        initialView="dayGridMonth"
+        initialView="timeGridDay"
         headerToolbar={{
           start: "title",
           end: desktop ? "dayGridMonth,timeGridWeek,timeGridDay,listWeek prev,today,next" : "prev,today,next",
