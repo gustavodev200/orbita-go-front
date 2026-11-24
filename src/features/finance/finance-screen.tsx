@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Icon } from "@/components/orbita/icon";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BudgetsTab } from "./budgets-tab";
+import { EvolutionTab } from "./evolution-tab";
 import { GoalsTab } from "./goals-tab";
 import { RecurringsTab } from "./recurrings-tab";
 import { StatementTab } from "./statement-tab";
@@ -13,11 +14,12 @@ const TABS = [
   { value: "extrato", label: "Extrato", icon: "receipt_long" },
   { value: "recorrentes", label: "Recorrentes", icon: "event_repeat" },
   { value: "orcamento", label: "Orçamento", icon: "donut_large" },
-  { value: "metas", label: "Metas", icon: "flag" },
+  { value: "metas", label: "Economia", icon: "savings" },
+  { value: "evolucao", label: "Evolução", icon: "monitoring" },
 ] as const;
 type TabValue = (typeof TABS)[number]["value"];
 
-/** Finanças: abas em pílula Extrato · Recorrentes · Orçamento · Metas (aba na URL). */
+/** Finanças: abas em pílula Extrato · Recorrentes · Orçamento · Economia · Evolução (aba na URL). */
 export function FinanceScreen() {
   const router = useRouter();
   const pathname = usePathname();
@@ -50,6 +52,9 @@ export function FinanceScreen() {
       </TabsContent>
       <TabsContent value="metas">
         <GoalsTab startCreating={params.get("nova") === "1"} />
+      </TabsContent>
+      <TabsContent value="evolucao">
+        <EvolutionTab />
       </TabsContent>
     </Tabs>
   );

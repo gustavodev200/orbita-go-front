@@ -17,7 +17,7 @@ async function enterAmount(page: Page, digits: string) {
 }
 
 test.describe("Finanças", () => {
-  test("alterna as 4 abas (Extrato, Recorrentes, Orçamento, Metas)", async ({ authedPage: page }) => {
+  test("alterna as 5 abas (Extrato, Recorrentes, Orçamento, Economia, Evolução)", async ({ authedPage: page }) => {
     await page.goto("/financas");
     await expect(page.getByRole("tab", { name: /extrato/i })).toHaveAttribute("data-state", "active");
     await expect(page.getByText("iFood — almoço")).toBeVisible();
@@ -30,9 +30,13 @@ test.describe("Finanças", () => {
     await expect(page.getByText("Orçamento do mês")).toBeVisible();
     await expect(page.getByText("Alimentação")).toBeVisible();
 
-    await page.getByRole("tab", { name: /metas/i }).click();
+    await page.getByRole("tab", { name: /economia/i }).click();
     await expect(page.getByRole("button", { name: "Viagem" })).toBeVisible();
     await expect(page.getByText("Guardar dinheiro")).toBeVisible();
+
+    await page.getByRole("tab", { name: /evolução/i }).click();
+    await expect(page.getByRole("heading", { name: "Entradas e saídas por mês" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Saldo acumulado" })).toBeVisible();
   });
 
   test("Novo lançamento: valor pelo teclado, categoria, conta e salvar envia o POST certo", async ({

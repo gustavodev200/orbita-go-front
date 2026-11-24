@@ -20,6 +20,10 @@ import {
   TRANSACTIONS,
   UPCOMING_RECURRINGS,
   HABITS,
+  CHALLENGES,
+  EVOLUTION,
+  OBJECTIVES,
+  TIMELINE_YEARS,
 } from "./fixtures-data";
 
 export type RecordedCall = { method: string; pathname: string; body: unknown };
@@ -50,6 +54,9 @@ export async function mockApi(page: Page, apiUrl: string): Promise<RecordedCall[
   const tasks: Task[] = TASKS.map((t) => ({ ...t }));
   const reminders: Reminder[] = REMINDERS.map((r) => ({ ...r }));
   const habits = HABITS.map((h) => ({ ...h, checks: [...h.checks] }));
+  const objectives: Record<string, unknown>[] = OBJECTIVES.map((o) => structuredClone(o));
+  const challenges: Record<string, unknown>[] = CHALLENGES.map((c) => structuredClone(c));
+  const lifeEvents: Record<string, unknown>[] = [];
 
   await page.route(`${apiUrl}/**`, async (route) => {
     const request = route.request();
@@ -213,6 +220,80 @@ export async function mockApi(page: Page, apiUrl: string): Promise<RecordedCall[
     if (pathname === "/shop" && method === "GET") return json(route, SHOP);
     if (pathname.match(/^\/shop\/[^/]+\/buy$/) && method === "POST") return json(route, ME);
     if (pathname === "/stats/compare" && method === "GET") return json(route, COMPARE);
+    if (pathname === "/transactions/evolution" && method === "GET") return json(route, EVOLUTION);
+
+    // Metas (objectives) — só o necessário para as telas.
+    if (pathname === "/objectives" && method === "GET") return json(route, objectives);
+    if (pathname === "/objectives" && method === "POST") {
+      const input = body as { milestones?: string[] } & Record<string, unknown>;
+      const { milestones = [], ...rest } = input;
+      const o = {
+        id: `obj-${objectives.length + 1}`,
+        why: null,
+        expectedResult: null,
+        deadline: null,
+        completed: false,
+        completedAt: null,
+        createdAt: new Date().toISOString(),
+        progress: 0,
+        tasks: [],
+        habits: [],
+        ...rest,
+        milestones: milestones.map((title, i) => ({ id: `ms-${i + 1}`, title, done: false })),
+      };
+      objectives.push(o);
+      return json(route, o);
+    }
+    const objMilestone = pathname.match(/^\/objectives\/([^/]+)\/milestones(?:\/([^/]+))?$/);
+    if (objMilestone) {
+      const o = objectives.find((x) => x.id === objMilestone[1]) as { milestones: { id: string; title: string; done: boolean }[] };
+      if (method === "POST") o.milestones.push({ id: `ms-${o.milestones.length + 10}`, title: (body as { title: string }).title, done: false });
+      if (method === "PATCH") Object.assign(o.milestones.find((m) => m.id === objMilestone[2]) ?? {}, body as object);
+      if (method === "DELETE") o.milestones = o.milestones.filter((m) => m.id !== objMilestone[2]);
+      return json(route, o);
+    }
+    if (pathname.match(/^\/objectives\/[^/]+$/) && method === "PATCH") {
+      const o = objectives.find((x) => x.id === pathname.split("/")[2]) as Record<string, unknown>;
+      const { completed, ...rest } = body as { completed?: boolean };
+      Object.assign(o, rest);
+      if (completed !== undefined) Object.assign(o, { completed, completedAt: completed ? new Date().toISOString() : null });
+      return json(route, o);
+    }
+
+    // Desafios
+    if (pathname === "/challenges" && method === "GET") return json(route, challenges);
+    if (pathname === "/challenges" && method === "POST") {
+      const input = body as { durationDays: number; startDate: string } & Record<string, unknown>;
+      const c = {
+        id: `chl-${challenges.length + 1}`,
+        why: null,
+        checks: [],
+        doneDays: 0,
+        missedDays: 0,
+        status: "active",
+        completedAt: null,
+        abandonedAt: null,
+        endDate: input.startDate,
+        ...input,
+      };
+      challenges.unshift(c);
+      return json(route, c);
+    }
+    const chlCheck = pathname.match(/^\/challenges\/([^/]+)\/checks\/(\d{4}-\d{2}-\d{2})$/);
+    if (chlCheck) {
+      const c = challenges.find((x) => x.id === chlCheck[1]) as { checks: string[]; doneDays: number };
+      c.checks = method === "PUT" ? [...new Set([...c.checks, chlCheck[2]])] : c.checks.filter((d) => d !== chlCheck[2]);
+      c.doneDays = c.checks.length;
+      return json(route, c);
+    }
+
+    // Linha do tempo
+    if (pathname === "/timeline" && method === "GET") return json(route, { events: lifeEvents, years: TIMELINE_YEARS });
+    if (pathname === "/timeline/events" && method === "POST") {
+      const e = { id: `life-${lifeEvents.length + 1}`, manual: true, description: null, ...(body as object) };
+      lifeEvents.unshift(e);
+      return json(route, e);
+    }
 
     if (pathname === "/push/subscribe" && (method === "POST" || method === "DELETE")) return json(route, { ok: true });
     if (pathname === "/push/test" && method === "POST") return json(route, { delivered: 1 });

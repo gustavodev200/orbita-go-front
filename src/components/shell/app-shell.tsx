@@ -8,6 +8,7 @@ import { ErrorState } from "@/components/orbita/states";
 import { useSession } from "@/features/auth/use-session";
 import { NewTransaction } from "@/features/finance/new-transaction/new-transaction";
 import { FocusTicker } from "@/features/focus/focus-ticker";
+import { MusicPlayer } from "@/features/focus/music-player";
 import { HabitDialog } from "@/features/habits/habit-dialog";
 import { useMe } from "@/features/me/hooks";
 import { ReminderDialog } from "@/features/reminders/reminder-dialog";
@@ -100,6 +101,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <NewTransaction />
       <QuickAddLayer />
       <FocusTicker />
+      <MusicPlayer />
     </div>
   );
 }

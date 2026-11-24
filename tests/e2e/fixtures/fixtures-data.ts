@@ -205,5 +205,77 @@ export const HABITS = [
     reminderTime: null as string | null,
     checks: [] as string[],
     streak: 0,
+    bestStreak: 4,
+    createdAt: "2026-09-01" as string | null,
+    objectiveId: null as string | null,
   },
 ];
+
+const todaySP = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+const thisMonth = todaySP.slice(0, 7);
+function shiftMonth(month: string, delta: number) {
+  const [y, m] = month.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1 + delta, 1)).toISOString().slice(0, 7);
+}
+
+export const EVOLUTION = Array.from({ length: 12 }, (_, i) => ({
+  month: shiftMonth(thisMonth, i - 11),
+  incomeCents: 620000,
+  expenseCents: 380000 + i * 10000,
+}));
+
+export const OBJECTIVES = [
+  {
+    id: "obj-1",
+    title: "Alcançar inglês B1",
+    why: "Crescer na carreira",
+    expectedResult: "Conversar 30 min sem travar",
+    horizon: "medium",
+    deadline: "2027-05-30",
+    icon: "translate",
+    color: "#3B82F6",
+    completed: false,
+    completedAt: null,
+    createdAt: "2026-11-01T12:00:00.000Z",
+    progress: 33,
+    milestones: [
+      { id: "ms-1", title: "Terminar o livro A2", done: true },
+      { id: "ms-2", title: "20 aulas de conversação", done: false },
+      { id: "ms-3", title: "Simulado B1", done: false },
+    ],
+    tasks: [],
+    habits: [],
+  },
+];
+
+export const CHALLENGES = [
+  {
+    id: "chl-1",
+    title: "Ler 10 páginas por dia",
+    why: null,
+    icon: "menu_book",
+    color: "#FF6A1F",
+    durationDays: 21,
+    startDate: todaySP,
+    endDate: todaySP,
+    checks: [] as string[],
+    doneDays: 0,
+    missedDays: 0,
+    status: "active",
+    completedAt: null,
+    abandonedAt: null,
+  },
+];
+
+const thisYear = Number(todaySP.slice(0, 4));
+export const TIMELINE_YEARS = [thisYear - 1, thisYear].map((year, i) => ({
+  year,
+  tasksDone: 40 + i * 30,
+  habitChecks: 100 + i * 80,
+  objectivesDone: i,
+  savingsGoalsDone: 1,
+  challengesDone: i * 2,
+  lifeEvents: 1,
+  incomeCents: 6_000_000,
+  expenseCents: 5_000_000 - i * 500_000,
+}));

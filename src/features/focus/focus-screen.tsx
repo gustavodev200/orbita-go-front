@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTasks } from "@/features/tasks/hooks";
 import { cn } from "@/lib/utils";
 import { BREAK_MINUTES, sessionsToday, useFocusStore, type FocusMinutes } from "./focus-store";
+import { MusicCard } from "./music-card";
 import { formatClock, useFocus } from "./use-focus";
 
 const PRESETS: FocusMinutes[] = [15, 25, 50];
@@ -38,7 +39,7 @@ function Ring({ pct, children }: { pct: number; children: React.ReactNode }) {
   );
 }
 
-/** Foco: pomodoro com presets, tarefa opcional, pausa automática e contagem do dia. */
+/** Foco: pomodoro com presets, tarefa opcional, pausa automática, contagem do dia e música. */
 export function FocusScreen() {
   const f = useFocus();
   const tasks = useTasks();
@@ -137,6 +138,7 @@ export function FocusScreen() {
             </div>
           </div>
         </Card>
+        <MusicCard />
       </div>
     </div>
   );

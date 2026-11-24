@@ -25,7 +25,7 @@ export function MoreMenu({
           side="top"
           align="end"
           sideOffset={12}
-          className="z-50 flex w-56 flex-col gap-0.5 rounded-3xl bg-sf p-2 shadow-[0_16px_40px_rgba(0,0,0,.18)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
+          className="z-50 flex w-56 max-h-[calc(100dvh-140px)] flex-col gap-0.5 overflow-y-auto rounded-3xl bg-sf p-2 shadow-[0_16px_40px_rgba(0,0,0,.18)] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
         >
           {items.map((item) => {
             const active = isActive(pathname, item.href);

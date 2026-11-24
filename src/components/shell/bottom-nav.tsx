@@ -35,7 +35,8 @@ function NavButton({ item, active }: { item: NavItem; active: boolean }) {
 
 /**
  * Barra flutuante em pílula escura (mobile): Início · Agenda · + · Tarefas · Finanças · Mais.
- * "Mais" abre Hábitos, Foco e Perfil; quando a tela atual é uma delas, o botão assume o ícone dela.
+ * "Mais" abre Metas, Hábitos, Desafios, Foco, Inglês, Linha do tempo e Perfil; quando a tela atual é
+ * uma delas, o botão assume o ícone dela.
  */
 export function BottomNav() {
   const pathname = usePathname();
@@ -72,7 +73,7 @@ export function BottomNav() {
               size={22}
               className={cn(moreActive && "icon-fill text-g")}
             />
-            {moreActive ? <NavLabel>{moreActive.label}</NavLabel> : null}
+            {moreActive ? <NavLabel>{moreActive.short ?? moreActive.label}</NavLabel> : null}
           </button>
         </MoreMenu>
       </div>

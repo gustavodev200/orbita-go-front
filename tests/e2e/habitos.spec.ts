@@ -29,6 +29,14 @@ test.describe("Hábitos", () => {
     expect(post?.body).toMatchObject({ name: "Ler 10 páginas", weekdays: [1, 2, 3, 4, 5, 6], reminderTime: "07:30" });
   });
 
+  test("mostra consistência, recorde e heatmap", async ({ authedPage: page }) => {
+    await page.goto("/habitos");
+    await expect(page.getByText("Consistência por semana")).toBeVisible();
+    await expect(page.getByText("Recorde").first()).toBeVisible();
+    await expect(page.getByText("4 dias")).toBeVisible();
+    await expect(page.getByRole("img", { name: "Últimas 13 semanas de Beber água" })).toBeVisible();
+  });
+
   test("Início mostra os hábitos de hoje", async ({ authedPage: page }) => {
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "Hábitos de hoje" })).toBeVisible();

@@ -12,6 +12,7 @@ import {
   depositGoal,
   financeKeys,
   getBudgets,
+  getEvolution,
   getGoals,
   getRecurrings,
   getSummary,
@@ -34,6 +35,10 @@ export function useTransactions(filters: TransactionFilters) {
 
 export function useSummary(month: string) {
   return useQuery({ queryKey: financeKeys.summary(month), queryFn: () => getSummary(month) });
+}
+
+export function useEvolution(months = 12) {
+  return useQuery({ queryKey: financeKeys.evolution(months), queryFn: () => getEvolution(months) });
 }
 
 export function useRecurrings(month: string) {

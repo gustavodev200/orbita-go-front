@@ -4,6 +4,7 @@ import { get, send, sendRewarded } from "@/lib/api/client";
 import {
   budgetSchema,
   goalSchema,
+  monthTotalsSchema,
   parsedTxSchema,
   recurringSchema,
   summarySchema,
@@ -23,11 +24,13 @@ export const financeKeys = {
   recurringsRoot: ["finance", "recurrings"] as const,
   budgets: (month: string) => ["finance", "budgets", month] as const,
   goals: ["finance", "goals"] as const,
+  evolution: (months: number) => ["finance", "evolution", months] as const,
 };
 
 export type TransactionFilters = { month: string; type?: TxType; category?: string };
 
 export const getTransactions = (f: TransactionFilters) => get("/transactions", z.array(transactionSchema), f);
+export const getEvolution = (months = 12) => get("/transactions/evolution", z.array(monthTotalsSchema), { months });
 export const getSummary = (month: string) => get("/transactions/summary", summarySchema, { month });
 export const parseTransaction = (text: string) => send("post", "/transactions/parse", parsedTxSchema, { text });
 

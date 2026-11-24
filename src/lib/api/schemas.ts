@@ -213,10 +213,16 @@ export const habitSchema = z.object({
   /** 0 = domingo … 6 = sábado. */
   weekdays: z.array(z.number()),
   reminderTime: z.string().nullable().default(null),
-  /** Dias marcados (YYYY-MM-DD) dos últimos 35 dias. */
+  /** Dias marcados (YYYY-MM-DD) dos últimos 91 dias (13 semanas). */
   checks: z.array(z.string()).default([]),
   /** Dias agendados seguidos marcados até hoje. */
   streak: z.number().default(0),
+  /** Maior sequência já feita (janela de ~1 ano). */
+  bestStreak: z.number().default(0),
+  /** Dia (YYYY-MM-DD) de criação — dias anteriores não contam na consistência. */
+  createdAt: z.string().nullable().default(null),
+  /** Meta (objective) que o hábito sustenta. */
+  objectiveId: z.string().nullable().default(null),
 });
 export type Habit = z.infer<typeof habitSchema>;
 
@@ -260,3 +266,91 @@ export const createdApiTokenSchema = apiTokenSchema.extend({
   token: z.string(),
 });
 export type CreatedApiToken = z.infer<typeof createdApiTokenSchema>;
+
+export const monthTotalsSchema = z.object({
+  month: z.string(),
+  incomeCents: z.number(),
+  expenseCents: z.number(),
+});
+export type MonthTotals = z.infer<typeof monthTotalsSchema>;
+
+export const objectiveHorizonSchema = z.enum(["short", "medium", "long"]);
+export type ObjectiveHorizon = z.infer<typeof objectiveHorizonSchema>;
+
+/** Meta geral (Goals & OKRs). Diferente de `Goal`, que é meta de economia. */
+export const objectiveSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  why: z.string().nullable().default(null),
+  expectedResult: z.string().nullable().default(null),
+  horizon: objectiveHorizonSchema,
+  /** "YYYY-MM-DD", opcional. */
+  deadline: z.string().nullable().default(null),
+  icon: z.string(),
+  color: z.string(),
+  completed: z.boolean(),
+  completedAt: z.string().nullable().default(null),
+  createdAt: z.string(),
+  /** 0–100: etapas + tarefas vinculadas feitas. */
+  progress: z.number(),
+  milestones: z.array(z.object({ id: z.string(), title: z.string(), done: z.boolean() })).default([]),
+  tasks: z
+    .array(z.object({ id: z.string(), title: z.string(), done: z.boolean(), dueDate: z.string().nullable().default(null) }))
+    .default([]),
+  habits: z.array(z.object({ id: z.string(), name: z.string(), icon: z.string(), color: z.string() })).default([]),
+});
+export type Objective = z.infer<typeof objectiveSchema>;
+
+export const challengeStatusSchema = z.enum(["upcoming", "active", "completed", "ended", "abandoned"]);
+export type ChallengeStatus = z.infer<typeof challengeStatusSchema>;
+
+export const challengeSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  why: z.string().nullable().default(null),
+  icon: z.string(),
+  color: z.string(),
+  durationDays: z.number(),
+  startDate: z.string(),
+  endDate: z.string(),
+  checks: z.array(z.string()).default([]),
+  doneDays: z.number(),
+  missedDays: z.number(),
+  status: challengeStatusSchema,
+  completedAt: z.string().nullable().default(null),
+  abandonedAt: z.string().nullable().default(null),
+});
+export type Challenge = z.infer<typeof challengeSchema>;
+
+export const lifeEventKindSchema = z.enum(["achievement", "project", "milestone"]);
+export type LifeEventKind = z.infer<typeof lifeEventKindSchema>;
+
+export const timelineEventSchema = z.object({
+  id: z.string(),
+  manual: z.boolean(),
+  kind: z.enum(["achievement", "project", "milestone", "objective", "savings", "challenge"]),
+  title: z.string(),
+  description: z.string().nullable().default(null),
+  date: z.string(),
+  icon: z.string(),
+});
+export type TimelineEvent = z.infer<typeof timelineEventSchema>;
+
+export const yearStatsSchema = z.object({
+  year: z.number(),
+  tasksDone: z.number(),
+  habitChecks: z.number(),
+  objectivesDone: z.number(),
+  savingsGoalsDone: z.number(),
+  challengesDone: z.number(),
+  lifeEvents: z.number(),
+  incomeCents: z.number(),
+  expenseCents: z.number(),
+});
+export type YearStats = z.infer<typeof yearStatsSchema>;
+
+export const timelineSchema = z.object({
+  events: z.array(timelineEventSchema),
+  years: z.array(yearStatsSchema),
+});
+export type Timeline = z.infer<typeof timelineSchema>;

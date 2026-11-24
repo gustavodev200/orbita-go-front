@@ -1,13 +1,23 @@
-export type NavItem = { href: string; label: string; icon: string; title: string };
+export type NavItem = {
+  href: string;
+  label: string;
+  icon: string;
+  title: string;
+  /** Rótulo curto para a pílula mobile (quando o normal não cabe). */
+  short?: string;
+};
 
 export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Início", icon: "home", title: "Início" },
   { href: "/agenda", label: "Agenda", icon: "calendar_month", title: "Agenda" },
   { href: "/tarefas", label: "Tarefas", icon: "task_alt", title: "Tarefas" },
   { href: "/financas", label: "Finanças", icon: "account_balance_wallet", title: "Finanças" },
+  { href: "/metas", label: "Metas", icon: "flag", title: "Metas" },
   { href: "/habitos", label: "Hábitos", icon: "self_improvement", title: "Hábitos" },
+  { href: "/desafios", label: "Desafios", icon: "sports_score", title: "Desafios" },
   { href: "/foco", label: "Foco", icon: "timer", title: "Foco" },
   { href: "/vocabulario", label: "Inglês", icon: "translate", title: "Vocabulário" },
+  { href: "/linha-do-tempo", label: "Linha do tempo", icon: "timeline", title: "Linha do tempo", short: "Trajetória" },
   { href: "/perfil", label: "Perfil", icon: "person", title: "Perfil" },
 ];
 

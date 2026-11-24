@@ -3,7 +3,7 @@ import { expect, test } from "./fixtures/test";
 test.describe("Barra mobile", () => {
   test.skip(({ isMobile }) => !isMobile, "barra só existe no mobile");
 
-  test("menu Mais leva a Hábitos, Foco e Perfil", async ({ authedPage: page }) => {
+  test("menu Mais leva às telas que não cabem na barra", async ({ authedPage: page }) => {
     await page.goto("/");
     const nav = page.getByRole("navigation", { name: "Navegação principal" });
     for (const label of ["Início", "Agenda", "Tarefas", "Finanças"]) {
@@ -12,9 +12,9 @@ test.describe("Barra mobile", () => {
 
     await nav.getByRole("button", { name: "Mais" }).click();
     const menu = page.getByRole("menu");
-    await expect(menu.getByRole("menuitem", { name: "Hábitos" })).toBeVisible();
-    await expect(menu.getByRole("menuitem", { name: "Foco" })).toBeVisible();
-    await expect(menu.getByRole("menuitem", { name: "Perfil" })).toBeVisible();
+    for (const label of ["Metas", "Hábitos", "Desafios", "Foco", "Linha do tempo", "Perfil"]) {
+      await expect(menu.getByRole("menuitem", { name: label })).toBeVisible();
+    }
 
     await menu.getByRole("menuitem", { name: "Hábitos" }).click();
     await expect(page).toHaveURL(/\/habitos$/);
@@ -24,7 +24,7 @@ test.describe("Barra mobile", () => {
   for (const width of [360, 390]) {
     test(`pílula cabe na tela em ${width}px`, async ({ authedPage: page }) => {
       await page.setViewportSize({ width, height: 800 });
-      for (const path of ["/", "/financas", "/habitos"]) {
+      for (const path of ["/", "/financas", "/habitos", "/linha-do-tempo"]) {
         await page.goto(path);
         const pill = page.getByRole("navigation", { name: "Navegação principal" }).locator("> div");
         const box = await pill.boundingBox();

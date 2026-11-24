@@ -14,3 +14,4 @@ export * from "./google-button";
 export * from "./panel";
 export * from "./confirm-dialog";
 export * from "./selection-bar";
+export * from "./charts";
