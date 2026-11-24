@@ -6,10 +6,21 @@ import { getSupabase } from "@/lib/supabase/client";
 
 const DEFAULT_NEXT = "/";
 
-/** Só caminho interno: bloqueia open redirect (?next=https://… ou //host). */
+/**
+ * Só caminho interno: bloqueia open redirect (?next=https://…, //host, /\host e
+ * variantes com tab/quebra de linha, que o parser de URL remove virando //host).
+ * Resolve contra uma origem fixa e devolve o caminho já normalizado.
+ */
 export function safeNextPath(raw: string | null | undefined): string {
-  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.startsWith("/\\")) return DEFAULT_NEXT;
-  return raw;
+  if (!raw?.startsWith("/")) return DEFAULT_NEXT;
+  const base = "https://orbita.invalid";
+  try {
+    const url = new URL(raw, base);
+    if (url.origin !== base) return DEFAULT_NEXT;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return DEFAULT_NEXT;
+  }
 }
 
 export async function signInWithGoogle(next: string | null) {
