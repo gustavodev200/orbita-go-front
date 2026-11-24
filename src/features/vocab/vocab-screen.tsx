@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Icon } from "@/components/orbita/icon";
 import { SegmentedControl } from "@/components/orbita/segmented-control";
 import { EmptyState, QueryState } from "@/components/orbita/states";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -12,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import type { Flashcard } from "@/lib/api/schemas";
 import { cn } from "@/lib/utils";
 import { useCreateFlashcard, useDeleteFlashcard, useFlashcards, useReviewFlashcard, useReviewQueue } from "./hooks";
-import { accuracy, summarize, type ReviewResult } from "./review";
+import { accuracy, dueLabel, formatInterval, LEARN_AHEAD_MIN, nextDue, RATING_OPTIONS, STATE_LABEL, summarize, type Answer, type Rating } from "./review";
 
 type Tab = "review" | "list";
 const TABS: { value: Tab; label: string }[] = [
@@ -20,30 +21,50 @@ const TABS: { value: Tab; label: string }[] = [
   { value: "list", label: "Meus cards" },
 ];
 
-/** Rodada: mostra o termo em português, a pessoa lembra o inglês, vira e se avalia. */
+/**
+ * Rodada no estilo Anki: só aparecem os cards vencidos (ou novos). A pessoa vê o
+ * português, lembra o inglês, vira e diz como foi — cada botão mostra em quanto
+ * tempo o card volta.
+ */
 function ReviewSession() {
   const queue = useReviewQueue();
+  const all = useFlashcards("");
   const review = useReviewFlashcard();
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
-  const [results, setResults] = useState<Record<string, ReviewResult>>({});
-  const cards = queue.data ?? [];
+  const [answers, setAnswers] = useState<Answer[]>([]);
+  /** Cards que voltam em poucos minutos e reaparecem no fim desta rodada. */
+  const [repeats, setRepeats] = useState<Flashcard[]>([]);
+  const cards = [...(queue.data ?? []), ...repeats];
   const card = cards[index];
+  const hasCards = (all.data?.length ?? 0) > 0;
 
-  const answer = (result: ReviewResult) => {
+  const answer = (rating: Rating) => {
     if (!card) return;
-    review.mutate({ id: card.id, result });
-    setResults((r) => ({ ...r, [card.id]: result }));
+    const repeat = card.nextIntervals[rating] <= LEARN_AHEAD_MIN;
+    if (repeat) setRepeats((r) => [...r, card]);
+    review.mutate(
+      { id: card.id, rating },
+      // Troca a cópia repetida pela versão reagendada (intervalos dos botões atualizados).
+      {
+        onSuccess: (updated) => repeat && setRepeats((r) => r.map((c) => (c.id === updated.id ? updated : c))),
+      },
+    );
+    setAnswers((a) => [...a, { id: card.id, rating }]);
     setFlipped(false);
     setIndex((i) => i + 1);
   };
 
   const restart = () => {
-    setIndex(0);
-    setFlipped(false);
-    setResults({});
-    void queue.refetch();
+    void queue.refetch().then(() => {
+      setIndex(0);
+      setFlipped(false);
+      setAnswers([]);
+      setRepeats([]);
+    });
   };
+
+  const next = nextDue(all.data ?? []);
 
   return (
     <QueryState
@@ -52,20 +73,33 @@ function ReviewSession() {
       isEmpty={cards.length === 0}
       frame={(node) => <Card>{node}</Card>}
       empty={
-        <EmptyState
-          icon="translate"
-          title="Nenhum card ainda"
-          text="Converse em inglês com o Claude e escreva em português o que não souber — os cards chegam aqui sozinhos."
-        />
+        hasCards ? (
+          <EmptyState
+            icon="check"
+            title="Tudo revisado por agora"
+            text={
+              next
+                ? `Próxima revisão ${dueLabel({ dueAt: next })}. Os cards voltam conforme a dificuldade de cada palavra.`
+                : "Os cards voltam conforme a dificuldade de cada palavra."
+            }
+          />
+        ) : (
+          <EmptyState icon="translate" title="Nenhum card ainda" text="Converse em inglês com o Claude e escreva em português o que não souber — os cards chegam aqui sozinhos." />
+        )
       }
     >
       {card ? (
         <div className="mx-auto flex w-full max-w-[520px] flex-col gap-4">
-          <div className="flex items-center justify-between text-xs text-mut">
-            <span>
-              Card {index + 1} de {cards.length}
+          <div className="flex items-center gap-3">
+            <Badge tone={card.state === "review" ? "info" : card.state === "new" ? "accent" : "pending"} size="sm" className="uppercase tracking-wide">
+              {STATE_LABEL[card.state]}
+            </Badge>
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-sf2" aria-hidden>
+              <div className="h-full rounded-full bg-g transition-[width]" style={{ width: `${(index / cards.length) * 100}%` }} />
+            </div>
+            <span className="shrink-0 text-xs text-mut">
+              {index + 1} de {cards.length}
             </span>
-            <span>{summarize(results, cards).correct} acerto(s)</span>
           </div>
           <button
             type="button"
@@ -73,22 +107,37 @@ function ReviewSession() {
             aria-label={flipped ? "Mostrar português" : "Mostrar resposta em inglês"}
             className="flex min-h-[220px] flex-col items-center justify-center gap-3 rounded-[28px] bg-sf p-6 text-center shadow-card transition-transform active:scale-[.99]"
           >
-            <span className="text-xs tracking-wide text-mut uppercase">{flipped ? "Inglês" : "Como se diz em inglês?"}</span>
-            <span className="text-[28px] leading-[1.2] font-semibold text-balance text-ink">{flipped ? card.en : card.pt}</span>
-            {flipped && card.example ? <span className="max-w-[380px] text-[15px] text-pretty text-mut italic">“{card.example}”</span> : null}
-            {flipped && card.note ? <span className="max-w-[380px] text-[13px] text-pretty text-mut">{card.note}</span> : null}
-            {!flipped ? <span className="text-[13px] text-mut">Toque para ver a resposta</span> : null}
+            {flipped ? (
+              <>
+                <span className="text-[15px] text-mut">{card.pt}</span>
+                <span className="text-[30px] leading-[1.2] font-semibold text-balance text-g">{card.en}</span>
+                {card.example ? <span className="max-w-[380px] text-[15px] text-pretty text-mut italic">“{card.example}”</span> : null}
+                {card.note ? <span className="max-w-[380px] text-[13px] text-pretty text-mut">{card.note}</span> : null}
+              </>
+            ) : (
+              <>
+                <span className="text-xs tracking-wide text-mut uppercase">Como se diz em inglês?</span>
+                <span className="text-[28px] leading-[1.2] font-semibold text-balance text-ink">{card.pt}</span>
+                <span className="text-[13px] text-mut">Toque para ver a resposta</span>
+              </>
+            )}
           </button>
           {flipped ? (
-            <div className="grid grid-cols-2 gap-3">
-              <Button variant="secondary-danger" onClick={() => answer("wrong")}>
-                <Icon name="close" size={20} />
-                Errei
-              </Button>
-              <Button onClick={() => answer("correct")}>
-                <Icon name="check" size={20} />
-                Acertei
-              </Button>
+            <div className="flex flex-col gap-2">
+              <span className="text-center text-sm text-mut">Como foi?</span>
+              <div className="grid grid-cols-4 gap-2">
+                {RATING_OPTIONS.map((o) => (
+                  <button
+                    key={o.value}
+                    type="button"
+                    onClick={() => answer(o.value)}
+                    className={cn("flex flex-col items-center gap-1 rounded-2xl border bg-sf px-1 py-3 transition-transform active:scale-[.97]", o.className)}
+                  >
+                    <span className="text-[15px] font-semibold">{o.label}</span>
+                    <span className="text-xs text-mut">{formatInterval(card.nextIntervals[o.value])}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           ) : (
             <Button variant="secondary" onClick={() => setFlipped(true)}>
@@ -97,21 +146,21 @@ function ReviewSession() {
           )}
         </div>
       ) : (
-        <RoundSummary results={results} cards={cards} onRestart={restart} />
+        <RoundSummary answers={answers} cards={cards} next={next} onRestart={restart} restarting={queue.isFetching} />
       )}
     </QueryState>
   );
 }
 
-function RoundSummary({ results, cards, onRestart }: { results: Record<string, ReviewResult>; cards: Flashcard[]; onRestart: () => void }) {
-  const { correct, total, missed } = summarize(results, cards);
+function RoundSummary({ answers, cards, next, onRestart, restarting }: { answers: Answer[]; cards: Flashcard[]; next: string | null; onRestart: () => void; restarting: boolean }) {
+  const { total, remembered, missed } = summarize(answers, cards);
   return (
     <Card className="mx-auto flex w-full max-w-[520px] flex-col items-center gap-3 text-center">
       <div className="flex size-16 items-center justify-center rounded-full bg-gs text-g">
         <Icon name="emoji_events" size={30} />
       </div>
       <div className="text-lg font-semibold">
-        {correct} de {total} certos
+        Lembrou {remembered} de {total}
       </div>
       {missed.length ? (
         <div className="flex flex-col gap-1 text-sm text-mut">
@@ -125,8 +174,9 @@ function RoundSummary({ results, cards, onRestart }: { results: Record<string, R
       ) : (
         <p className="m-0 text-sm text-mut">Rodada perfeita!</p>
       )}
-      <Button size="sm" className="mt-2" onClick={onRestart}>
-        Nova rodada
+      {next ? <p className="m-0 text-xs text-mut">Próxima revisão {dueLabel({ dueAt: next })}</p> : null}
+      <Button size="sm" className="mt-2" onClick={onRestart} disabled={restarting}>
+        Ver se há mais cards
       </Button>
     </Card>
   );
@@ -176,8 +226,9 @@ function CardRow({ card }: { card: Flashcard }) {
         </div>
         {card.example ? <div className="mt-1 truncate text-[13px] text-mut italic">{card.example}</div> : null}
       </div>
-      <span className={cn("shrink-0 text-xs", acc === null ? "text-mut" : acc >= 70 ? "text-g" : "text-r")}>
-        {acc === null ? "novo" : `${acc}%`}
+      <span className="flex shrink-0 flex-col items-end gap-0.5 text-xs">
+        <span className="text-mut">{dueLabel(card)}</span>
+        {acc === null ? null : <span className={acc >= 70 ? "text-g" : "text-r"}>{acc}%</span>}
       </span>
       <DropdownMenu>
         <DropdownMenuTrigger
@@ -216,7 +267,13 @@ function CardList() {
         rows={4}
         isEmpty={list.length === 0}
         frame={(node) => <Card>{node}</Card>}
-        empty={<EmptyState icon="translate" title={q ? "Nada encontrado" : "Nenhum card ainda"} text={q ? "Tente outra palavra." : "Adicione acima ou deixe o Claude criar durante a conversa."} />}
+        empty={
+          <EmptyState
+            icon="translate"
+            title={q ? "Nada encontrado" : "Nenhum card ainda"}
+            text={q ? "Tente outra palavra." : "Adicione acima ou deixe o Claude criar durante a conversa."}
+          />
+        }
       >
         <Card padding="none" className="flex flex-col px-5 [&>*+*]:border-t [&>*+*]:border-sf2">
           {list.map((c) => (

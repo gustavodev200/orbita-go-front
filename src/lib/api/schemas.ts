@@ -86,7 +86,15 @@ export const summarySchema = z.object({
   balanceCents: z.number(),
   incomeCents: z.number(),
   expenseCents: z.number(),
-  daily: z.array(z.object({ day: z.number(), incomeCents: z.number(), expenseCents: z.number() })).default([]),
+  daily: z
+    .array(
+      z.object({
+        day: z.number(),
+        incomeCents: z.number(),
+        expenseCents: z.number(),
+      }),
+    )
+    .default([]),
 });
 export type Summary = z.infer<typeof summarySchema>;
 
@@ -191,9 +199,11 @@ const monthStatSchema = z.object({
   byCategory: z.array(z.object({ key: z.string(), cents: z.number() })).default([]),
   totalCents: z.number(),
 });
-export const compareSchema = z.object({ previous: monthStatSchema, current: monthStatSchema });
+export const compareSchema = z.object({
+  previous: monthStatSchema,
+  current: monthStatSchema,
+});
 export type Compare = z.infer<typeof compareSchema>;
-
 
 export const habitSchema = z.object({
   id: z.string(),
@@ -220,9 +230,23 @@ export const flashcardSchema = z.object({
   correctCount: z.number().default(0),
   wrongCount: z.number().default(0),
   lastReviewedAt: z.string().nullable().default(null),
+  /** Repetição espaçada: em que fase o card está e quando volta (null = novo). */
+  state: z.enum(["new", "learning", "review", "relearning"]).catch("new"),
+  intervalDays: z.number().default(0),
+  dueAt: z.string().nullable().default(null),
+  /** Minutos até o card voltar para cada botão (Esqueci / Difícil / Lembrei / Fácil). */
+  nextIntervals: z
+    .object({
+      again: z.number(),
+      hard: z.number(),
+      good: z.number(),
+      easy: z.number(),
+    })
+    .default({ again: 1, hard: 6, good: 10, easy: 5760 }),
   createdAt: z.string(),
 });
 export type Flashcard = z.infer<typeof flashcardSchema>;
+export type FlashcardRating = keyof Flashcard["nextIntervals"];
 
 export const createFlashcardsResultSchema = z.object({
   created: z.array(flashcardSchema),
@@ -239,5 +263,7 @@ export const apiTokenSchema = z.object({
 });
 export type ApiToken = z.infer<typeof apiTokenSchema>;
 
-export const createdApiTokenSchema = apiTokenSchema.extend({ token: z.string() });
+export const createdApiTokenSchema = apiTokenSchema.extend({
+  token: z.string(),
+});
 export type CreatedApiToken = z.infer<typeof createdApiTokenSchema>;

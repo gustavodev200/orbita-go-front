@@ -4,15 +4,23 @@ import { useQuery } from "@tanstack/react-query";
 
 import { useApiMutation } from "@/features/rewards/use-api-mutation";
 import { createFlashcards, deleteFlashcard, getFlashcards, getReviewQueue, reviewFlashcard, vocabKeys, type FlashcardInput } from "./api";
-import type { ReviewResult } from "./review";
+import type { Rating } from "./review";
 
 export function useFlashcards(q: string) {
-  return useQuery({ queryKey: vocabKeys.list(q), queryFn: () => getFlashcards(q) });
+  return useQuery({
+    queryKey: vocabKeys.list(q),
+    queryFn: () => getFlashcards(q),
+  });
 }
 
 /** Fila da rodada: buscada uma vez e congelada até "Nova rodada" (refetch). */
 export function useReviewQueue() {
-  return useQuery({ queryKey: vocabKeys.review, queryFn: () => getReviewQueue(), staleTime: Infinity, refetchOnWindowFocus: false });
+  return useQuery({
+    queryKey: vocabKeys.review,
+    queryFn: () => getReviewQueue(),
+    staleTime: Infinity,
+    refetchOnWindowFocus: false,
+  });
 }
 
 export function useCreateFlashcard(onDone?: () => void) {
@@ -32,10 +40,10 @@ export function useDeleteFlashcard() {
   });
 }
 
-/** Registra acerto/erro sem invalidar a fila da rodada em andamento. */
+/** Registra a avaliação (o servidor agenda a próxima revisão) sem mexer na fila da rodada em andamento. */
 export function useReviewFlashcard() {
   return useApiMutation({
-    mutationFn: ({ id, result }: { id: string; result: ReviewResult }) => reviewFlashcard(id, result),
+    mutationFn: ({ id, rating }: { id: string; rating: Rating }) => reviewFlashcard(id, rating),
     invalidate: [["flashcards", "list"]],
   });
 }
