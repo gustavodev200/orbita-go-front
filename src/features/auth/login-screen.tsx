@@ -47,7 +47,7 @@ export function LoginScreen() {
 
       <div className="relative flex flex-1 flex-col px-6 pt-[calc(2rem+env(safe-area-inset-top))] pb-[calc(2rem+env(safe-area-inset-bottom))] lg:w-full lg:max-w-[440px] lg:flex-none lg:p-0">
         <div className="flex items-center gap-2.5">
-          <LogoMark size={36} className="[--ink:#fff]" />
+          <LogoMark size={36} className="[--ink:#fff] [--logo-cut:#0d0d0f]" />
           <span className="text-xl leading-none font-semibold tracking-[-.02em]">
             órbita<span className="text-[#ff6a1f]">GO</span>
           </span>

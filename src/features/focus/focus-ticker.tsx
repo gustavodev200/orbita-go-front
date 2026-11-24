@@ -11,7 +11,7 @@ async function notify(title: string, body: string) {
   try {
     if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
     const registration = await navigator.serviceWorker?.ready;
-    if (registration) await registration.showNotification(title, { body, icon: "/icons/icon-192.png", tag: "focus" });
+    if (registration) await registration.showNotification(title, { body, icon: "/icons/icon-192.png", badge: "/icons/badge-96.png", tag: "focus" });
     else new Notification(title, { body });
   } catch {
     // Sem permissão/suporte: o toast dentro do app já avisa.

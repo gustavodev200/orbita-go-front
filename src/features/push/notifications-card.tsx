@@ -51,7 +51,7 @@ async function showLocalTest() {
   await registration.showNotification("Notificações ativas", {
     body: "Este aparelho consegue exibir avisos do órbitaGO.",
     icon: "/icons/icon-192.png",
-    badge: "/icons/icon-192.png",
+    badge: "/icons/badge-96.png",
     tag: "push-test",
   });
 }

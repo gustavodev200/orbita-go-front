@@ -23,7 +23,7 @@ import { useAdoptServerTheme } from "./use-theme";
 function Splash() {
   return (
     <div className="flex min-h-dvh flex-1 items-center justify-center">
-      <LogoMark size={56} className="animate-pulse" />
+      <LogoMark size={64} animated className="[--logo-cut:var(--bg)]" />
     </div>
   );
 }

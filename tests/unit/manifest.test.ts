@@ -13,24 +13,14 @@ describe("manifest", () => {
     expect(m.background_color).toBe("#F4F4F6");
   });
 
-  it("inclui os 3 ícones (192, 512 e o 512 maskable)", () => {
+  it("tem ícone comum e maskable em 192 e 512, todos PNG", () => {
     const icons = manifest().icons ?? [];
-    expect(icons).toHaveLength(3);
-
-    const bySize = (size: string) => icons.filter((i) => i.sizes === size);
-    expect(bySize("192x192")).toHaveLength(1);
-
-    const icons512 = bySize("512x512");
-    expect(icons512).toHaveLength(2);
-    expect(icons512.every((i) => i.type === "image/png")).toBe(true);
-
-    const maskable = icons512.find((i) => i.purpose === "maskable");
-    expect(maskable).toBeDefined();
-    expect(maskable?.src).toBe("/icons/icon-512-maskable.png");
-
-    const nonMaskable = icons512.find((i) => i.purpose !== "maskable");
-    expect(nonMaskable?.src).toBe("/icons/icon-512.png");
-
-    expect(icons.find((i) => i.sizes === "192x192")?.src).toBe("/icons/icon-192.png");
+    expect(icons).toHaveLength(4);
+    expect(icons.every((i) => i.type === "image/png")).toBe(true);
+    const find = (size: string, purpose: string) => icons.find((i) => i.sizes === size && i.purpose === purpose)?.src;
+    expect(find("192x192", "any")).toBe("/icons/icon-192.png");
+    expect(find("512x512", "any")).toBe("/icons/icon-512.png");
+    expect(find("192x192", "maskable")).toBe("/icons/icon-192-maskable.png");
+    expect(find("512x512", "maskable")).toBe("/icons/icon-512-maskable.png");
   });
 });
