@@ -160,6 +160,10 @@ export type Goal = z.infer<typeof goalSchema>;
 export const prioritySchema = z.enum(["high", "medium", "low"]);
 export type Priority = z.infer<typeof prioritySchema>;
 
+/** Coluna do quadro Kanban (`done` ⇔ status "done", o back mantém em sincronia). */
+export const taskStatusSchema = z.enum(["backlog", "todo", "doing", "done"]);
+export type TaskStatus = z.infer<typeof taskStatusSchema>;
+
 export const taskSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -168,6 +172,9 @@ export const taskSchema = z.object({
   reminderAt: z.string().nullish(),
   done: z.boolean(),
   doneAt: z.string().nullish(),
+  status: taskStatusSchema.default("todo"),
+  position: z.number().default(0),
+  objectiveId: z.string().nullish(),
 });
 export type Task = z.infer<typeof taskSchema>;
 

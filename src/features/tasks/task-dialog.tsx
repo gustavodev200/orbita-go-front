@@ -10,7 +10,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useEnsurePush } from "@/features/push/use-push-status";
-import type { Priority, Task } from "@/lib/api/schemas";
+import type { Priority, Task, TaskStatus } from "@/lib/api/schemas";
 import { PRIORITY_COLOR, PRIORITY_LABEL } from "@/lib/colors";
 import { addDaysISO, todayISO } from "@/lib/dates";
 import { cn } from "@/lib/utils";
@@ -29,16 +29,19 @@ export function TaskDialog({
   onOpenChange,
   task,
   initialDate,
+  initialStatus,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   task?: Task;
   initialDate?: string | null;
+  /** Coluna do quadro onde a tarefa nasce (padrão: "A fazer"). */
+  initialStatus?: TaskStatus;
 }) {
   const today = todayISO();
   const tomorrow = addDaysISO(today, 1);
   const [title, setTitle] = useState(task?.title ?? "");
-  const [dueDate, setDueDate] = useState<string | null>(task ? (task.dueDate?.slice(0, 10) ?? null) : (initialDate ?? today));
+  const [dueDate, setDueDate] = useState<string | null>(task ? (task.dueDate?.slice(0, 10) ?? null) : (initialDate === undefined ? today : initialDate));
   const [priority, setPriority] = useState<Priority>(task?.priority ?? "medium");
   const [reminder, setReminder] = useState(!!task?.reminderAt);
   const [time, setTime] = useState(task?.reminderAt && task.reminderAt.length >= 16 ? task.reminderAt.slice(11, 16) : "09:00");
@@ -57,7 +60,7 @@ export function TaskDialog({
     if (!t) return;
     const input = { title: t, dueDate, priority, reminderAt: reminderAtFrom(dueDate, today, reminder, time) };
     if (task) update.mutate({ id: task.id, input });
-    else create.mutate(input);
+    else create.mutate({ ...input, status: initialStatus });
   };
 
   return (

@@ -42,6 +42,7 @@ function QuickAddLayer() {
           onOpenChange={onOpenChange}
           task={quickAdd.editing}
           initialDate={quickAdd.date}
+          initialStatus={quickAdd.status}
         />
       ) : null}
       {quickAdd.kind === "habit" ? (

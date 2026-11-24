@@ -2,10 +2,10 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
-import type { Task } from "@/lib/api/schemas";
+import type { Task, TaskStatus } from "@/lib/api/schemas";
 import { reminderKeys } from "@/features/reminders/api";
 import { useApiMutation, useRewardedMutation } from "@/features/rewards/use-api-mutation";
-import { bulkDeleteTasks, completeTask, createTask, deleteTask, getTasks, taskKeys, uncompleteTask, updateTask, type TaskInput } from "./api";
+import { bulkDeleteTasks, completeTask, createTask, deleteTask, getTasks, moveTask, taskKeys, uncompleteTask, updateTask, type TaskInput } from "./api";
 
 export function useTasks() {
   return useQuery({ queryKey: taskKeys.all, queryFn: getTasks });
@@ -65,5 +65,33 @@ export function useToggleTask() {
     setDone(task.id, !task.done);
     if (task.done) uncomplete.mutate(task);
     else complete.mutate(task);
+  };
+}
+
+export type MoveVars = { task: Task; status: TaskStatus; position?: number };
+
+/**
+ * Move card no quadro com update otimista (o card já aparece na coluna nova);
+ * em erro volta ao lugar. Ir para "done" passa pelo fluxo de recompensa.
+ */
+export function useMoveTask() {
+  const qc = useQueryClient();
+  const patch = (id: string, fields: Partial<Task>) =>
+    qc.setQueryData<Task[]>(taskKeys.all, (old) => old?.map((t) => (t.id === id ? { ...t, ...fields } : t)));
+
+  const mutation = useRewardedMutation({
+    mutationFn: ({ task, status, position }: MoveVars) => moveTask(task.id, { status, position }),
+    invalidate: [taskKeys.all],
+    onError: (_e, { task }) => patch(task.id, task),
+  });
+
+  return (vars: MoveVars) => {
+    if (vars.status === vars.task.status && vars.position === undefined) return;
+    patch(vars.task.id, {
+      status: vars.status,
+      done: vars.status === "done",
+      ...(vars.position !== undefined && { position: vars.position }),
+    });
+    mutation.mutate(vars);
   };
 }

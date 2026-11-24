@@ -124,7 +124,16 @@ export async function mockApi(page: Page, apiUrl: string): Promise<RecordedCall[
     }
     if (pathname === "/tasks" && method === "GET") return json(route, tasks);
     if (pathname === "/tasks" && method === "POST") {
-      const t: Task = { id: `task-${tasks.length + 1}`, done: false, doneAt: null, reminderAt: null, ...(body as object) } as Task;
+      const status = (body as { status?: Task["status"] }).status ?? "todo";
+      const t: Task = {
+        id: `task-${tasks.length + 1}`,
+        done: status === "done",
+        doneAt: null,
+        reminderAt: null,
+        position: Math.max(0, ...tasks.filter((x) => x.status === status).map((x) => x.position)) + 1,
+        ...(body as object),
+        status,
+      } as Task;
       tasks.unshift(t);
       return json(route, t);
     }
@@ -134,6 +143,7 @@ export async function mockApi(page: Page, apiUrl: string): Promise<RecordedCall[
       if (t) {
         t.done = true;
         t.doneAt = new Date().toISOString();
+        t.status = "done";
       }
       return json(route, { data: t ?? tasks[0], reward: reward({ xp: 5, coins: 0 }) });
     }
@@ -143,8 +153,22 @@ export async function mockApi(page: Page, apiUrl: string): Promise<RecordedCall[
       if (t) {
         t.done = false;
         t.doneAt = null;
+        t.status = "todo";
       }
       return json(route, t ?? tasks[0]);
+    }
+    if (pathname.match(/^\/tasks\/[^/]+\/move$/) && method === "POST") {
+      const id = pathname.split("/")[2];
+      const t = tasks.find((x) => x.id === id);
+      const { status, position } = body as { status: Task["status"]; position?: number };
+      const finishing = !!t && status === "done" && !t.done;
+      if (t) {
+        t.status = status;
+        t.position = position ?? Math.max(0, ...tasks.filter((x) => x.status === status).map((x) => x.position)) + 1;
+        t.done = status === "done";
+        t.doneAt = t.done ? (t.doneAt ?? new Date().toISOString()) : null;
+      }
+      return json(route, { data: t ?? tasks[0], reward: finishing ? reward({ xp: 5, coins: 0 }) : null });
     }
     if (pathname.match(/^\/tasks\/[^/]+$/) && method === "PATCH") return json(route, { ...tasks[0], ...(body as object) });
     if (pathname.match(/^\/tasks\/[^/]+$/) && method === "DELETE") return json(route, { ok: true });

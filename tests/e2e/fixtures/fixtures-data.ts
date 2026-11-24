@@ -136,8 +136,8 @@ export const GOALS = [
 ];
 
 export const TASKS = [
-  { id: "task-1", title: "Ligar pro dentista", dueDate: TODAY, priority: "high" as const, reminderAt: null, done: false, doneAt: null },
-  { id: "task-2", title: "Revisar orçamento", dueDate: TODAY, priority: "medium" as const, reminderAt: null, done: false, doneAt: null },
+  { id: "task-1", title: "Ligar pro dentista", dueDate: TODAY, priority: "high" as const, reminderAt: null, done: false, doneAt: null, status: "todo" as const, position: 1 },
+  { id: "task-2", title: "Revisar orçamento", dueDate: TODAY, priority: "medium" as const, reminderAt: null, done: false, doneAt: null, status: "todo" as const, position: 2 },
 ];
 
 export const REMINDERS = [

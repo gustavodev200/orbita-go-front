@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-import type { Habit, Me, Task, ThemePref, Transaction } from "@/lib/api/schemas";
+import type { Habit, Me, Task, TaskStatus, ThemePref, Transaction } from "@/lib/api/schemas";
 
 export type TxSheetState = {
   open: boolean;
@@ -14,7 +14,7 @@ export type TxSheetState = {
 /** Diálogos globais de criação rápida (botão + e toque num dia da agenda). */
 export type QuickAddState =
   | { kind: null }
-  | { kind: "task"; date?: string | null; editing?: Task }
+  | { kind: "task"; date?: string | null; editing?: Task; status?: TaskStatus }
   | { kind: "reminder"; date?: string; time?: string }
   | { kind: "habit"; editing?: Habit };
 

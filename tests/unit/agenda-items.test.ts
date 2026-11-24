@@ -20,7 +20,7 @@ function reminder(over: Partial<Reminder> = {}): Reminder {
 }
 
 function task(over: Partial<Task> = {}): Task {
-  return { id: "t1", title: "Dentista", dueDate: "2026-10-02", priority: "medium", reminderAt: null, done: false, doneAt: null, ...over };
+  return { id: "t1", title: "Dentista", dueDate: "2026-10-02", priority: "medium", reminderAt: null, done: false, doneAt: null, status: "todo", position: 0, ...over };
 }
 
 function bill(over: Partial<Recurring> = {}): Recurring {

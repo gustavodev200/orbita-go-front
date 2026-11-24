@@ -21,6 +21,7 @@ import { useSelection } from "@/hooks/use-selection";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/app-store";
 import { useBulkDeleteTasks, useCreateTask, useDeleteTask, useTasks, useToggleTask } from "./hooks";
+import { TaskViewSwitch } from "./view-switch";
 
 type Group = "atrasadas" | "hoje" | "amanha" | "prox" | "sem";
 const GROUPS: { value: Group; label: string }[] = [
@@ -199,14 +200,17 @@ export function TasksScreen() {
   return (
     <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
       <div className="flex min-w-0 flex-col gap-5">
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-2">
+            <TaskViewSwitch view="lista" />
+            {list.length && !sel.active ? (
+              <Button variant="ghost" size="xs" onClick={sel.start}>
+                <Icon name="checklist" size={18} />
+                Selecionar
+              </Button>
+            ) : null}
+          </div>
           <QuickCreate />
-          {list.length && !sel.active ? (
-            <Button variant="ghost" size="xs" className="self-end" onClick={sel.start}>
-              <Icon name="checklist" size={18} />
-              Selecionar
-            </Button>
-          ) : null}
         </div>
         <QueryState
           query={tasks}
