@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import type { Flashcard } from "@/lib/api/schemas";
 import { cn } from "@/lib/utils";
 import { useCreateFlashcard, useDeleteFlashcard, useFlashcards, useReviewFlashcard, useReviewQueue } from "./hooks";
-import { accuracy, dueLabel, formatInterval, LEARN_AHEAD_MIN, nextDue, RATING_OPTIONS, STATE_LABEL, summarize, type Answer, type Rating } from "./review";
+import { accuracy, dueLabel, formatDays, nextDue, RATING_OPTIONS, STATE_LABEL, summarize, type Answer, type Rating } from "./review";
 
 type Tab = "review" | "list";
 const TABS: { value: Tab; label: string }[] = [
@@ -23,8 +23,8 @@ const TABS: { value: Tab; label: string }[] = [
 
 /**
  * Rodada no estilo Anki: só aparecem os cards vencidos (ou novos). A pessoa vê o
- * português, lembra o inglês, vira e diz como foi — cada botão mostra em quanto
- * tempo o card volta.
+ * português, lembra o inglês, vira e diz como foi — cada botão mostra em quantos
+ * dias o card volta. Nada se repete na mesma rodada.
  */
 function ReviewSession() {
   const queue = useReviewQueue();
@@ -33,23 +33,13 @@ function ReviewSession() {
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [answers, setAnswers] = useState<Answer[]>([]);
-  /** Cards que voltam em poucos minutos e reaparecem no fim desta rodada. */
-  const [repeats, setRepeats] = useState<Flashcard[]>([]);
-  const cards = [...(queue.data ?? []), ...repeats];
+  const cards = queue.data ?? [];
   const card = cards[index];
   const hasCards = (all.data?.length ?? 0) > 0;
 
   const answer = (rating: Rating) => {
     if (!card) return;
-    const repeat = card.nextIntervals[rating] <= LEARN_AHEAD_MIN;
-    if (repeat) setRepeats((r) => [...r, card]);
-    review.mutate(
-      { id: card.id, rating },
-      // Troca a cópia repetida pela versão reagendada (intervalos dos botões atualizados).
-      {
-        onSuccess: (updated) => repeat && setRepeats((r) => r.map((c) => (c.id === updated.id ? updated : c))),
-      },
-    );
+    review.mutate({ id: card.id, rating });
     setAnswers((a) => [...a, { id: card.id, rating }]);
     setFlipped(false);
     setIndex((i) => i + 1);
@@ -60,7 +50,6 @@ function ReviewSession() {
       setIndex(0);
       setFlipped(false);
       setAnswers([]);
-      setRepeats([]);
     });
   };
 
@@ -78,9 +67,7 @@ function ReviewSession() {
             icon="check"
             title="Tudo revisado por agora"
             text={
-              next
-                ? `Próxima revisão ${dueLabel({ dueAt: next })}. Os cards voltam conforme a dificuldade de cada palavra.`
-                : "Os cards voltam conforme a dificuldade de cada palavra."
+              next ? `Próxima revisão: ${dueLabel({ dueAt: next })}. Cada card volta nos dias do botão que você escolheu.` : "Cada card volta nos dias do botão que você escolheu."
             }
           />
         ) : (
@@ -134,7 +121,7 @@ function ReviewSession() {
                     className={cn("flex flex-col items-center gap-1 rounded-2xl border bg-sf px-1 py-3 transition-transform active:scale-[.97]", o.className)}
                   >
                     <span className="text-[15px] font-semibold">{o.label}</span>
-                    <span className="text-xs text-mut">{formatInterval(card.nextIntervals[o.value])}</span>
+                    <span className="text-xs text-mut">{formatDays(card.nextIntervalDays[o.value])}</span>
                   </button>
                 ))}
               </div>
@@ -146,7 +133,7 @@ function ReviewSession() {
           )}
         </div>
       ) : (
-        <RoundSummary answers={answers} cards={cards} next={next} onRestart={restart} restarting={queue.isFetching} />
+        <RoundSummary answers={answers} cards={cards} next={next} onRestart={restart} restarting={queue.isFetching || review.isPending} />
       )}
     </QueryState>
   );
@@ -174,7 +161,7 @@ function RoundSummary({ answers, cards, next, onRestart, restarting }: { answers
       ) : (
         <p className="m-0 text-sm text-mut">Rodada perfeita!</p>
       )}
-      {next ? <p className="m-0 text-xs text-mut">Próxima revisão {dueLabel({ dueAt: next })}</p> : null}
+      {next ? <p className="m-0 text-xs text-mut">Próxima revisão: {dueLabel({ dueAt: next })}</p> : null}
       <Button size="sm" className="mt-2" onClick={onRestart} disabled={restarting}>
         Ver se há mais cards
       </Button>

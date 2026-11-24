@@ -13,14 +13,12 @@ export function useFlashcards(q: string) {
   });
 }
 
-/** Fila da rodada: buscada uma vez e congelada até "Nova rodada" (refetch). */
+/**
+ * Fila da rodada: congelada enquanto a rodada acontece, mas buscada de novo
+ * sempre que a tela abre — senão o cache traria de volta cards já respondidos.
+ */
 export function useReviewQueue() {
-  return useQuery({
-    queryKey: vocabKeys.review,
-    queryFn: () => getReviewQueue(),
-    staleTime: Infinity,
-    refetchOnWindowFocus: false,
-  });
+  return useQuery({ queryKey: vocabKeys.review, queryFn: () => getReviewQueue(), staleTime: Infinity, refetchOnMount: "always", refetchOnWindowFocus: false });
 }
 
 export function useCreateFlashcard(onDone?: () => void) {

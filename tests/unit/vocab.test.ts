@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { claudeMcpCommand } from "@/features/api-tokens/api";
-import { accuracy, dueLabel, formatInterval, nextDue, summarize } from "@/features/vocab/review";
+import { accuracy, dueLabel, formatDays, nextDue, summarize } from "@/features/vocab/review";
 import type { Flashcard } from "@/lib/api/schemas";
 
 const card = (id: string, extra: Partial<Flashcard> = {}): Flashcard => ({
@@ -16,7 +16,7 @@ const card = (id: string, extra: Partial<Flashcard> = {}): Flashcard => ({
   state: "new",
   intervalDays: 0,
   dueAt: null,
-  nextIntervals: { again: 1, hard: 6, good: 10, easy: 5760 },
+  nextIntervalDays: { again: 1, hard: 2, good: 3, easy: 4 },
   createdAt: "2026-11-23T12:00:00Z",
   ...extra,
 });
@@ -48,18 +48,15 @@ describe("summarize", () => {
   });
 });
 
-describe("formatInterval", () => {
+describe("formatDays", () => {
   it.each([
-    [1, "1 min"],
-    [6, "6 min"],
-    [90, "2 h"],
-    [1440, "1 dia"],
-    [5760, "4 dias"],
-    [60 * 1440, "2 meses"],
-    [547 * 1440, "1,5 ano"],
-    [730 * 1440, "2 anos"],
-  ])("%i min → %s", (minutes, label) => {
-    expect(formatInterval(minutes)).toBe(label);
+    [1, "1 dia"],
+    [8, "8 dias"],
+    [60, "2 meses"],
+    [547, "1,5 ano"],
+    [730, "2 anos"],
+  ])("%i → %s", (days, label) => {
+    expect(formatDays(days)).toBe(label);
   });
 });
 
@@ -68,7 +65,8 @@ describe("dueLabel / nextDue", () => {
   it("novo, vencido e futuro", () => {
     expect(dueLabel({ dueAt: null }, now)).toBe("novo");
     expect(dueLabel({ dueAt: "2026-11-24T11:00:00Z" }, now)).toBe("agora");
-    expect(dueLabel({ dueAt: "2026-11-27T12:00:00Z" }, now)).toBe("em 3 dias");
+    expect(dueLabel({ dueAt: "2026-11-25T07:00:00Z" }, now)).toBe("amanhã");
+    expect(dueLabel({ dueAt: "2026-11-27T07:00:00Z" }, now)).toBe("em 3 dias");
   });
   it("pega o próximo card no futuro, ignorando novos e vencidos", () => {
     const due = nextDue([{ dueAt: null }, { dueAt: "2026-11-24T11:00:00Z" }, { dueAt: "2026-11-30T00:00:00Z" }, { dueAt: "2026-11-24T12:10:00Z" }], now);

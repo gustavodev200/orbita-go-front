@@ -21,31 +21,26 @@ export const STATE_LABEL: Record<Flashcard["state"], string> = {
   relearning: "Reaprendendo",
 };
 
-/**
- * Card que volta em até 20 min reaparece ainda nesta rodada (como no Anki),
- * em vez de obrigar a pessoa a sair e voltar.
- */
-export const LEARN_AHEAD_MIN = 20;
+const DAY_MS = 86_400_000;
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 const decimal = (n: number) => (Math.round(n * 10) / 10).toString().replace(".", ",");
 
-/** "1 min", "6 min", "2 h", "4 dias", "2 meses", "1,5 ano". */
-export function formatInterval(minutes: number): string {
-  if (minutes < 60) return `${Math.max(1, Math.round(minutes))} min`;
-  if (minutes < 1440) return `${Math.round(minutes / 60)} h`;
-  const days = Math.round(minutes / 1440);
-  if (days < 30) return plural(days, "dia", "dias");
-  if (days < 365) return plural(Math.round(days / 30), "mês", "meses");
-  const years = days / 365;
+/** "1 dia", "8 dias", "2 meses", "1,5 ano". */
+export function formatDays(days: number): string {
+  const d = Math.max(1, Math.round(days));
+  if (d < 30) return plural(d, "dia", "dias");
+  if (d < 365) return plural(Math.round(d / 30), "mês", "meses");
+  const years = d / 365;
   return `${decimal(years)} ${years < 2 ? "ano" : "anos"}`;
 }
 
-/** Texto curto de quando o card volta: "novo", "agora", "em 3 dias". */
+/** Quando o card volta: "novo", "agora", "amanhã", "em 8 dias". */
 export function dueLabel(card: Pick<Flashcard, "dueAt">, now = Date.now()): string {
   if (!card.dueAt) return "novo";
-  const minutes = (new Date(card.dueAt).getTime() - now) / 60_000;
-  return minutes <= 0 ? "agora" : `em ${formatInterval(minutes)}`;
+  const days = Math.ceil((new Date(card.dueAt).getTime() - now) / DAY_MS);
+  if (days <= 0) return "agora";
+  return days === 1 ? "amanhã" : `em ${formatDays(days)}`;
 }
 
 /** Próximo card a vencer (para "volte em X" quando a fila esvazia). */

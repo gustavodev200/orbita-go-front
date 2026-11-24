@@ -234,19 +234,12 @@ export const flashcardSchema = z.object({
   state: z.enum(["new", "learning", "review", "relearning"]).catch("new"),
   intervalDays: z.number().default(0),
   dueAt: z.string().nullable().default(null),
-  /** Minutos até o card voltar para cada botão (Esqueci / Difícil / Lembrei / Fácil). */
-  nextIntervals: z
-    .object({
-      again: z.number(),
-      hard: z.number(),
-      good: z.number(),
-      easy: z.number(),
-    })
-    .default({ again: 1, hard: 6, good: 10, easy: 5760 }),
+  /** Em quantos dias o card volta para cada botão (Esqueci / Difícil / Lembrei / Fácil). */
+  nextIntervalDays: z.object({ again: z.number(), hard: z.number(), good: z.number(), easy: z.number() }).default({ again: 1, hard: 2, good: 3, easy: 4 }),
   createdAt: z.string(),
 });
 export type Flashcard = z.infer<typeof flashcardSchema>;
-export type FlashcardRating = keyof Flashcard["nextIntervals"];
+export type FlashcardRating = keyof Flashcard["nextIntervalDays"];
 
 export const createFlashcardsResultSchema = z.object({
   created: z.array(flashcardSchema),
