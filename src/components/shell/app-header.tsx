@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Icon } from "@/components/orbita/icon";
 import { Avatar } from "@/components/ui/avatar";
 import { FocusPill } from "@/features/focus/focus-pill";
+import { NotificationBell } from "@/features/notifications/notification-bell";
 import { greeting } from "@/lib/dates";
 import { useAppStore } from "@/stores/app-store";
 import { titleFor } from "./nav";
@@ -16,7 +17,7 @@ const roundBtn =
 
 /**
  * Header: no Início mostra avatar + saudação (como um app de uso diário);
- * nas outras telas, o título. À direita: sino (agenda/lembretes) e, no
+ * nas outras telas, o título. À direita: sino (central de notificações) e, no
  * desktop, tema + avatar.
  */
 export function AppHeader() {
@@ -53,9 +54,7 @@ export function AppHeader() {
       >
         <Icon name={isDark ? "light_mode" : "dark_mode"} size={22} />
       </button>
-      <Link href="/agenda" aria-label="Agenda e lembretes" className={roundBtn}>
-        <Icon name="notifications" size={22} />
-      </Link>
+      <NotificationBell className={roundBtn} />
       <Link href="/perfil" aria-label="Perfil" className="hidden lg:block">
         <Avatar src={me?.avatarUrl} name={me?.name ?? me?.email} size={44} />
       </Link>

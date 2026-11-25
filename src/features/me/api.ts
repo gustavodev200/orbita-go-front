@@ -25,6 +25,7 @@ export type UpdateMeInput = Partial<{
   monthlyIncomeCents: number | null;
   enabledCategoryKeys: string[];
   notificationsEnabled: boolean;
+  notificationDigestTime: string;
 }>;
 export const updateMe = (input: UpdateMeInput) => send("patch", "/me", meSchema, input);
 

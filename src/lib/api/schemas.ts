@@ -25,6 +25,8 @@ export const meSchema = z.object({
   ownedItems: z.array(z.string()).default([]),
   enabledCategoryKeys: z.array(z.string()).default([]),
   notificationsEnabled: z.boolean().default(true),
+  /** Horário (HH:mm) do resumo diário da central de notificações. */
+  notificationDigestTime: z.string().default("08:00"),
 });
 export type Me = z.infer<typeof meSchema>;
 

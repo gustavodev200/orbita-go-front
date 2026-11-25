@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useUpdateMe } from "@/features/me/hooks";
 import { cn } from "@/lib/utils";
+import { useAppStore } from "@/stores/app-store";
 import { sendTestPush } from "./api";
 import { usePushStatus, type PushState } from "./use-push-status";
 import { usePushSubscription } from "./use-push-subscription";
@@ -54,6 +55,43 @@ async function showLocalTest() {
     badge: "/icons/badge-96.png",
     tag: "push-test",
   });
+}
+
+/**
+ * Horário do resumo diário da central (tarefas atrasadas, hábitos, contas…).
+ * Salva ao sair do campo; valor inválido/igual não chama o back.
+ */
+function DigestTimeRow() {
+  const current = useAppStore((s) => s.me?.notificationDigestTime) ?? "08:00";
+  const updateMe = useUpdateMe();
+  const [value, setValue] = useState<string | null>(null);
+  const shown = value ?? current;
+
+  function save() {
+    if (value && /^\d{2}:\d{2}$/.test(value) && value !== current) {
+      updateMe.mutate({ notificationDigestTime: value }, { onSuccess: () => toast.success(`Resumo diário às ${value}`) });
+    }
+    setValue(null);
+  }
+
+  return (
+    <label className="flex items-center gap-3 rounded-2xl bg-sf2 px-4 py-3">
+      <Icon name="wb_sunny" size={20} className="text-mut" />
+      <span className="min-w-0 flex-1">
+        <span className="block text-[14px] leading-[1.3] font-medium text-ink">Resumo diário</span>
+        <span className="block text-[12px] leading-[1.4] text-mut">Um aviso só com o que importa no dia. Alertas urgentes chegam na hora; nada entre 22h e 7h.</span>
+      </span>
+      <input
+        type="time"
+        value={shown}
+        onChange={(e) => setValue(e.target.value)}
+        onBlur={save}
+        disabled={updateMe.isPending}
+        aria-label="Horário do resumo diário"
+        className="h-10 rounded-full bg-sf px-3 text-[14px] font-medium text-ink"
+      />
+    </label>
+  );
 }
 
 /** Card de status das notificações: ativar/desativar e enviar um teste real. */
@@ -124,6 +162,7 @@ export function NotificationsCard({ className }: { className?: string }) {
           {busy ? "Ativando…" : "Ativar notificações"}
         </Button>
       ) : null}
+      <DigestTimeRow />
     </Card>
   );
 }

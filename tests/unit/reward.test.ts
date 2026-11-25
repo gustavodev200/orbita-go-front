@@ -24,6 +24,7 @@ const baseMe: Me = {
   ownedItems: [],
   enabledCategoryKeys: ["ali"],
   notificationsEnabled: true,
+  notificationDigestTime: "08:00",
 };
 
 function reward(over: Partial<Reward> = {}): Reward {

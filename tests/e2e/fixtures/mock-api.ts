@@ -71,6 +71,11 @@ export async function mockApi(page: Page, apiUrl: string): Promise<RecordedCall[
     }
     calls.push({ method, pathname, body });
 
+    // Central de notificações: vazia (o sino fica sem badge).
+    if (pathname === "/notifications" && method === "GET") return json(route, { items: [], unreadCount: 0 });
+    if (pathname === "/notifications/summary" && method === "GET") return json(route, { unread: 0, urgent: 0 });
+    if (pathname.startsWith("/notifications/") && method === "POST") return json(route, { unread: 0, urgent: 0 });
+
     // /me
     if (pathname === "/me" && method === "GET") return json(route, ME);
     if (pathname === "/me" && method === "PATCH") return json(route, { ...ME, ...(body as object) });

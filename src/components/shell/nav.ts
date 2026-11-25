@@ -10,6 +10,7 @@ export type NavItem = {
 export const NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Início", icon: "home", title: "Início" },
   { href: "/agenda", label: "Agenda", icon: "calendar_month", title: "Agenda" },
+  { href: "/notificacoes", label: "Notificações", icon: "notifications", title: "Notificações", short: "Alertas" },
   { href: "/tarefas", label: "Tarefas", icon: "task_alt", title: "Tarefas" },
   { href: "/notas", label: "Notas", icon: "sticky_note_2", title: "Notas" },
   { href: "/financas", label: "Finanças", icon: "account_balance_wallet", title: "Finanças" },
