@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Icon } from "@/components/orbita/icon";
 import { SegmentedControl } from "@/components/orbita/segmented-control";
@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import type { Flashcard } from "@/lib/api/schemas";
 import { cn } from "@/lib/utils";
 import { useCreateFlashcard, useDeleteFlashcard, useFlashcards, useReviewFlashcard, useReviewQueue } from "./hooks";
-import { accuracy, dueLabel, formatDays, nextDue, RATING_OPTIONS, STATE_LABEL, summarize, type Answer, type Rating } from "./review";
+import { accuracy, dueLabel, intervalLabel, nextDue, RATING_OPTIONS, STATE_LABEL, summarize, type Answer, type Rating } from "./review";
 
 type Tab = "review" | "list";
 const TABS: { value: Tab; label: string }[] = [
@@ -23,8 +23,8 @@ const TABS: { value: Tab; label: string }[] = [
 
 /**
  * Rodada no estilo Anki: só aparecem os cards vencidos (ou novos). A pessoa vê o
- * português, lembra o inglês, vira e diz como foi — cada botão mostra em quantos
- * dias o card volta. Nada se repete na mesma rodada.
+ * português, lembra o inglês, vira e diz como foi — cada botão mostra em quanto
+ * tempo o card volta (minutos nas primeiras revisões, depois dias).
  */
 function ReviewSession() {
   const queue = useReviewQueue();
@@ -54,6 +54,16 @@ function ReviewSession() {
   };
 
   const next = nextDue(all.data ?? []);
+  const empty = !queue.isFetching && cards.length === 0;
+
+  // Fila vazia e card em aprendizado voltando em minutos: busca sozinho quando vencer.
+  useEffect(() => {
+    if (!empty || !next) return;
+    const wait = new Date(next).getTime() - Date.now();
+    if (wait > 60 * 60_000) return;
+    const timer = setTimeout(() => void queue.refetch(), Math.max(0, wait) + 1_000);
+    return () => clearTimeout(timer);
+  }, [empty, next, queue]);
 
   return (
     <QueryState
@@ -67,7 +77,7 @@ function ReviewSession() {
             icon="check"
             title="Tudo revisado por agora"
             text={
-              next ? `Próxima revisão: ${dueLabel({ dueAt: next })}. Cada card volta nos dias do botão que você escolheu.` : "Cada card volta nos dias do botão que você escolheu."
+              next ? `Próxima revisão: ${dueLabel({ dueAt: next })}. Cada card volta no tempo do botão que você escolheu.` : "Cada card volta no tempo do botão que você escolheu."
             }
           />
         ) : (
@@ -121,7 +131,7 @@ function ReviewSession() {
                     className={cn("flex flex-col items-center gap-1 rounded-2xl border bg-sf px-1 py-3 transition-transform active:scale-[.97]", o.className)}
                   >
                     <span className="text-[15px] font-semibold">{o.label}</span>
-                    <span className="text-xs text-mut">{formatDays(card.nextIntervalDays[o.value])}</span>
+                    <span className="text-xs text-mut">{intervalLabel(card, o.value)}</span>
                   </button>
                 ))}
               </div>

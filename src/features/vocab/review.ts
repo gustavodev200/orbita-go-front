@@ -22,6 +22,7 @@ export const STATE_LABEL: Record<Flashcard["state"], string> = {
 };
 
 const DAY_MS = 86_400_000;
+const MIN_MS = 60_000;
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 const decimal = (n: number) => (Math.round(n * 10) / 10).toString().replace(".", ",");
@@ -35,11 +36,26 @@ export function formatDays(days: number): string {
   return `${decimal(years)} ${years < 2 ? "ano" : "anos"}`;
 }
 
-/** Quando o card volta: "novo", "agora", "amanhã", "em 8 dias". */
+/** "1 min", "3 h", "10 h", "2 dias" — texto embaixo de cada botão. */
+export function formatMinutes(minutes: number): string {
+  const m = Math.max(1, Math.round(minutes));
+  if (m < 60) return `${m} min`;
+  if (m < 1440) return `${Math.round(m / 60)} h`;
+  return formatDays(m / 1440);
+}
+
+/** Em quanto tempo o card volta se a pessoa apertar `rating`. */
+export function intervalLabel(card: Pick<Flashcard, "nextIntervalMinutes" | "nextIntervalDays">, rating: Rating): string {
+  return card.nextIntervalMinutes ? formatMinutes(card.nextIntervalMinutes[rating]) : formatDays(card.nextIntervalDays[rating]);
+}
+
+/** Quando o card volta: "novo", "agora", "em 5 min", "em 3 h", "amanhã", "em 8 dias". */
 export function dueLabel(card: Pick<Flashcard, "dueAt">, now = Date.now()): string {
   if (!card.dueAt) return "novo";
-  const days = Math.ceil((new Date(card.dueAt).getTime() - now) / DAY_MS);
-  if (days <= 0) return "agora";
+  const ms = new Date(card.dueAt).getTime() - now;
+  if (ms <= 0) return "agora";
+  if (ms < DAY_MS / 2) return `em ${formatMinutes(Math.ceil(ms / MIN_MS))}`;
+  const days = Math.ceil(ms / DAY_MS);
   return days === 1 ? "amanhã" : `em ${formatDays(days)}`;
 }
 

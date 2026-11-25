@@ -274,7 +274,9 @@ export const flashcardSchema = z.object({
   state: z.enum(["new", "learning", "review", "relearning"]).catch("new"),
   intervalDays: z.number().default(0),
   dueAt: z.string().nullable().default(null),
-  /** Em quantos dias o card volta para cada botão (Esqueci / Difícil / Lembrei / Fácil). */
+  /** Em quantos minutos o card volta para cada botão (Esqueci / Difícil / Lembrei / Fácil). */
+  nextIntervalMinutes: z.object({ again: z.number(), hard: z.number(), good: z.number(), easy: z.number() }).nullable().default(null),
+  /** Legado: o mesmo intervalo em dias (usado se a API ainda não mandar minutos). */
   nextIntervalDays: z.object({ again: z.number(), hard: z.number(), good: z.number(), easy: z.number() }).default({ again: 1, hard: 2, good: 3, easy: 4 }),
   createdAt: z.string(),
 });

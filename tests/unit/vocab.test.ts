@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { claudeMcpCommand } from "@/features/api-tokens/api";
-import { accuracy, dueLabel, formatDays, nextDue, summarize } from "@/features/vocab/review";
+import { accuracy, dueLabel, formatDays, formatMinutes, intervalLabel, nextDue, summarize } from "@/features/vocab/review";
 import type { Flashcard } from "@/lib/api/schemas";
 
 const card = (id: string, extra: Partial<Flashcard> = {}): Flashcard => ({
@@ -16,6 +16,7 @@ const card = (id: string, extra: Partial<Flashcard> = {}): Flashcard => ({
   state: "new",
   intervalDays: 0,
   dueAt: null,
+  nextIntervalMinutes: null,
   nextIntervalDays: { again: 1, hard: 2, good: 3, easy: 4 },
   createdAt: "2026-11-23T12:00:00Z",
   ...extra,
@@ -60,11 +61,31 @@ describe("formatDays", () => {
   });
 });
 
+describe("formatMinutes / intervalLabel", () => {
+  it.each([
+    [1, "1 min"],
+    [10, "10 min"],
+    [60, "1 h"],
+    [600, "10 h"],
+    [1440, "1 dia"],
+    [4320, "3 dias"],
+  ])("%i → %s", (minutes, label) => {
+    expect(formatMinutes(minutes)).toBe(label);
+  });
+  it("usa minutos da API e cai para dias se não vierem", () => {
+    const learning = card("a", { nextIntervalMinutes: { again: 1, hard: 3, good: 5, easy: 10 } });
+    expect(intervalLabel(learning, "good")).toBe("5 min");
+    expect(intervalLabel(card("b"), "good")).toBe("3 dias");
+  });
+});
+
 describe("dueLabel / nextDue", () => {
   const now = Date.parse("2026-11-24T12:00:00Z");
   it("novo, vencido e futuro", () => {
     expect(dueLabel({ dueAt: null }, now)).toBe("novo");
     expect(dueLabel({ dueAt: "2026-11-24T11:00:00Z" }, now)).toBe("agora");
+    expect(dueLabel({ dueAt: "2026-11-24T12:05:00Z" }, now)).toBe("em 5 min");
+    expect(dueLabel({ dueAt: "2026-11-24T15:00:00Z" }, now)).toBe("em 3 h");
     expect(dueLabel({ dueAt: "2026-11-25T07:00:00Z" }, now)).toBe("amanhã");
     expect(dueLabel({ dueAt: "2026-11-27T07:00:00Z" }, now)).toBe("em 3 dias");
   });
