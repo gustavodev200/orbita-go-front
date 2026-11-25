@@ -73,5 +73,6 @@ export type GoalInput = {
 export type UpdateGoalInput = Partial<Omit<GoalInput, "savedCents">>;
 export const createGoal = (input: GoalInput) => send("post", "/goals", goalSchema, input);
 export const updateGoal = (id: string, input: UpdateGoalInput) => send("patch", `/goals/${id}`, goalSchema, input);
+export const deleteGoal = (id: string) => send("delete", `/goals/${id}`, goalSchema);
 export const depositGoal = (id: string, amountCents: number) =>
   sendRewarded("post", `/goals/${id}/deposit`, goalSchema, { amountCents });

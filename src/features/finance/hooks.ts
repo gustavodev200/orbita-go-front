@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import {
   createGoal,
   createTransaction,
+  deleteGoal,
   deleteTransaction,
   depositGoal,
   financeKeys,
@@ -114,6 +115,14 @@ export function useUpdateGoal(onDone?: (g: Goal) => void) {
     mutationFn: ({ id, input }: { id: string; input: UpdateGoalInput }) => updateGoal(id, input),
     invalidate: [financeKeys.goals],
     onSuccess: (g) => onDone?.(g),
+  });
+}
+
+export function useDeleteGoal() {
+  return useApiMutation({
+    mutationFn: (id: string) => deleteGoal(id),
+    invalidate: [financeKeys.goals],
+    message: () => "Meta excluída",
   });
 }
 

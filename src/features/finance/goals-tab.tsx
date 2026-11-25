@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { ChoiceChip } from "@/components/orbita/choice-chip";
+import { ConfirmDialog } from "@/components/orbita/confirm-dialog";
 import { Icon } from "@/components/orbita/icon";
 import { IconTile } from "@/components/orbita/icon-tile";
 import { FieldLabel, PanelBody, PanelFooter, PanelHeader } from "@/components/orbita/panel";
@@ -17,7 +18,7 @@ import type { Goal, GoalFrequency } from "@/lib/api/schemas";
 import { deadlineToISODay, formatDeadline, todayISO } from "@/lib/dates";
 import { formatBRL, maskBRLInput, parseBRLToCents } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { useCreateGoal, useDepositGoal, useGoals, useUpdateGoal } from "@/features/finance/hooks";
+import { useCreateGoal, useDeleteGoal, useDepositGoal, useGoals, useUpdateGoal } from "@/features/finance/hooks";
 import { installmentByDeadline, suggestedStepAmountOf } from "./goal-trail-math";
 
 export const GOAL_ICONS = ["landscape", "shield", "laptop_mac", "directions_car", "home", "school"];
@@ -282,35 +283,62 @@ function EditGoalDialog({ goal, open, onOpenChange, onSaved }: { goal: Goal; ope
   const cents = parseBRLToCents(form.value);
   const installmentCents = parseBRLToCents(form.installmentValue);
   const installmentInvalid = form.installmentMode === "manual" && (installmentCents <= 0 || installmentCents > cents);
+  const del = useDeleteGoal();
+  const [confirming, setConfirming] = useState(false);
   return (
-    <Dialog open={open} onOpenChange={onOpenChange} title="Editar meta">
-      <PanelHeader title="Editar meta" onClose={() => onOpenChange(false)} />
-      <PanelBody>
-        <GoalFields state={form} onChange={patch} alreadySavedCents={goal.savedCents} />
-      </PanelBody>
-      <PanelFooter>
-        <Button
-          size="lg"
-          block
-          disabled={!form.name.trim() || cents <= 0 || installmentInvalid || update.isPending}
-          onClick={() =>
-            update.mutate({
-              id: goal.id,
-              input: {
-                name: form.name.trim(),
-                targetCents: cents,
-                icon: form.icon,
-                deadline: form.deadline || null,
-                frequency: form.deadline && form.frequency ? form.frequency : null,
-                installmentCents: form.installmentMode === "manual" ? installmentCents : null,
-              },
-            })
-          }
-        >
-          Salvar
-        </Button>
-      </PanelFooter>
-    </Dialog>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange} title="Editar meta">
+        <PanelHeader title="Editar meta" onClose={() => onOpenChange(false)} />
+        <PanelBody>
+          <GoalFields state={form} onChange={patch} alreadySavedCents={goal.savedCents} />
+        </PanelBody>
+        <PanelFooter>
+          <Button size="lg" variant="secondary" onClick={() => setConfirming(true)} aria-label="Excluir meta">
+            <Icon name="delete" size={20} />
+          </Button>
+          <Button
+            className="flex-1"
+            size="lg"
+            disabled={!form.name.trim() || cents <= 0 || installmentInvalid || update.isPending}
+            onClick={() =>
+              update.mutate({
+                id: goal.id,
+                input: {
+                  name: form.name.trim(),
+                  targetCents: cents,
+                  icon: form.icon,
+                  deadline: form.deadline || null,
+                  frequency: form.deadline && form.frequency ? form.frequency : null,
+                  installmentCents: form.installmentMode === "manual" ? installmentCents : null,
+                },
+              })
+            }
+          >
+            Salvar
+          </Button>
+        </PanelFooter>
+      </Dialog>
+      <ConfirmDialog
+        open={confirming}
+        onOpenChange={setConfirming}
+        title="Excluir meta?"
+        text={
+          goal.savedCents > 0
+            ? `A meta e os ${formatBRL(goal.savedCents)} registrados nela somem. Seu extrato não muda e o XP ganho continua com você.`
+            : "Essa ação não pode ser desfeita."
+        }
+        confirmLabel="Excluir"
+        busy={del.isPending}
+        onConfirm={() =>
+          del.mutate(goal.id, {
+            onSuccess: () => {
+              setConfirming(false);
+              onOpenChange(false);
+            },
+          })
+        }
+      />
+    </>
   );
 }
 
