@@ -195,11 +195,36 @@ export type ReminderDraft = z.infer<typeof reminderDraftSchema>;
 
 export const reminderSchema = reminderDraftSchema.extend({
   id: z.string(),
+  /** "note" só aparece em espelhos de `Note.reminderAt` (gerados pelo back). */
+  kind: z.enum(["finance", "task", "note"]),
   enabled: z.boolean(),
   /** Presente quando o lembrete é o espelho de `Task.reminderAt` (gerado pelo back). */
   taskId: z.string().nullish(),
+  /** Presente quando o lembrete é o espelho de `Note.reminderAt` (gerado pelo back). */
+  noteId: z.string().nullish(),
 });
 export type Reminder = z.infer<typeof reminderSchema>;
+
+export const NOTE_COLORS = ["default", "red", "orange", "yellow", "green", "teal", "blue", "purple", "pink", "gray"] as const;
+export type NoteColor = (typeof NOTE_COLORS)[number];
+
+export const noteItemSchema = z.object({ id: z.string(), text: z.string(), done: z.boolean() });
+export type NoteItem = z.infer<typeof noteItemSchema>;
+
+export const noteSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  body: z.string(),
+  color: z.enum(NOTE_COLORS).catch("default"),
+  labels: z.array(z.string()).default([]),
+  checklist: z.boolean(),
+  items: z.array(noteItemSchema).default([]),
+  pinned: z.boolean(),
+  reminderAt: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type Note = z.infer<typeof noteSchema>;
 
 const monthStatSchema = z.object({
   month: z.string(),

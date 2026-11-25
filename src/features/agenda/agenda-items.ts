@@ -37,7 +37,8 @@ function taskTime(t: Task): string | null {
  * Tudo que acontece em [start, end) — lembretes ativos (expandidos pela
  * repetição), tarefas com data e contas fixas com vencimento. Lembretes
  * criados a partir de tarefa (o back sincroniza `Task.reminderAt` e marca
- * `taskId`) já aparecem como a própria tarefa: pulamos o espelho.
+ * `taskId`) já aparecem como a própria tarefa: pulamos o espelho. Espelhos
+ * de nota (`noteId`) vivem na tela de Notas.
  */
 export function buildAgenda(
   { reminders = [], tasks = [], recurrings = [] }: { reminders?: Reminder[]; tasks?: Task[]; recurrings?: Recurring[] },
@@ -48,7 +49,7 @@ export function buildAgenda(
 
   for (const r of reminders) {
     if (!r.enabled) continue;
-    if (r.taskId) continue;
+    if (r.taskId || r.noteId) continue;
     for (let d = start; d < end; d = addDaysISO(d, 1)) {
       if (!occursOn(r, d)) continue;
       items.push({ key: `r-${r.id}-${d}`, kind: "reminder", date: d, time: r.time, title: r.title, done: false, reminder: r });

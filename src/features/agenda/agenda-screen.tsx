@@ -92,7 +92,7 @@ export function AgendaScreen() {
   const reminders = useReminders();
   const openQuickAdd = useAppStore((s) => s.openQuickAdd);
   const dayItems = agenda.items.filter((i) => i.date === selected);
-  const list = (reminders.data ?? []).filter((r) => !r.taskId);
+  const list = (reminders.data ?? []).filter((r) => !r.taskId && !r.noteId);
   const sel = useSelection<string>();
   const [confirming, setConfirming] = useState(false);
   const bulk = useBulkDeleteReminders(() => {
